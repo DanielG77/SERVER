@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tournaments_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: .
+      POSTGRES_DB: test_tournaments
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tournaments_network
+
+  backend:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-prod} # Puede ser 'dev' o 'prod'
+      args:
+        - PROFILE=${PROFILE:-dev}
+    container_name: tournaments_backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: test_tournaments
+      DB_USER: postgres
+      DB_PASSWORD: .
+      SPRING_PROFILES_ACTIVE: ${PROFILE:-dev}
+    ports:
+      - "8080:8080"
+      - "5005:5005" # Solo para desarrollo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+      - ./src:/app/src # Solo para desarrollo (hot reload)
+    networks:
+      - tournaments_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+
+networks:
+  tournaments_network:
+    driver: bridge
