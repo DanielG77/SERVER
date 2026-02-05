@@ -7,4 +7,8 @@ public class TournamentNotFoundException extends RuntimeException {
     public TournamentNotFoundException(UUID id) {
         super("Tournament not found with id: " + id);
     }
+
+    public TournamentNotFoundException(String slug) {
+        super("Tournament not found with slug: " + slug);
+    }
 }

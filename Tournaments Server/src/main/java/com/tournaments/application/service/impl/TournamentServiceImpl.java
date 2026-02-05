@@ -40,6 +40,14 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Tournament getTournamentBySlug(String slug) {
+        return tournamentRepository.findBySlug(slug)
+                .orElseThrow(() -> new TournamentNotFoundException(slug));
+    }
+
+
+    @Override
     @Transactional
     public Tournament createTournament(CreateTournamentRequest request) {
         if (request.getStartAt() != null && request.getEndAt() != null) {

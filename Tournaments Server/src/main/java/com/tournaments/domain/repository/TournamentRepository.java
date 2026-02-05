@@ -15,6 +15,8 @@ public interface TournamentRepository {
 
     Optional<Tournament> findById(UUID id);
 
+    Optional<Tournament> findBySlug(String slug);
+
     Page<Tournament> findAll(TournamentFilter filter, Pageable pageable);
 
     boolean existsBySlug(String slug);

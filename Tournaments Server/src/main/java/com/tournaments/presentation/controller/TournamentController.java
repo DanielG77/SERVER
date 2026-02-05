@@ -110,6 +110,12 @@ public class TournamentController {
         return ResponseEntity.ok(ApiResponse.success(tournament));
     }
 
+    @GetMapping("/{slug}")
+    public ResponseEntity<ApiResponse<Tournament>> getBySlug(@PathVariable String slug) {
+        Tournament tournament = tournamentService.getTournamentBySlug(slug);
+        return ResponseEntity.ok(ApiResponse.success(tournament));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Tournament>> update(
             @PathVariable UUID id,

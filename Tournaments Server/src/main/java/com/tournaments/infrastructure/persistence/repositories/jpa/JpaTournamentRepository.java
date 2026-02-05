@@ -1,5 +1,6 @@
 package com.tournaments.infrastructure.persistence.repositories.jpa;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,8 @@ import com.tournaments.infrastructure.persistence.entities.TournamentEntity;
 @Repository
 public interface JpaTournamentRepository
         extends JpaRepository<TournamentEntity, UUID>, JpaSpecificationExecutor<TournamentEntity> {
+
+    Optional<TournamentEntity> findBySlug(String slug);    
 
     boolean existsBySlug(String slug);
 

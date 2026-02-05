@@ -34,6 +34,13 @@ public class TournamentRepositoryImpl implements TournamentRepository {
     }
 
     @Override
+    public Optional<Tournament> findBySlug(String slug) {
+        Objects.requireNonNull(slug, "Invalid Slug: null");
+        return jpaTournamentRepository.findBySlug(slug)
+                .map(TournamentMapper::toDomain);
+    }
+
+    @Override
     public Tournament save(Tournament tournament) {
         Objects.requireNonNull(tournament, "Tournament cannot be null");
         TournamentEntity entity = TournamentMapper.toEntity(tournament);

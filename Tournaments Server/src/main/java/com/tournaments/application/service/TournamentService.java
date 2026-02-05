@@ -18,6 +18,8 @@ public interface TournamentService {
 
     Tournament getTournamentById(UUID id);
 
+    Tournament getTournamentBySlug(String slug);
+
     Tournament updateTournament(UUID id, UpdateTournamentRequest request);
 
     void deleteTournament(UUID id, boolean hardDelete);
