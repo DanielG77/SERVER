@@ -34,7 +34,7 @@ import com.tournaments.presentation.response.PaginationMeta;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/tournaments")
+@RequestMapping("tournaments")
 @Validated
 public class TournamentController {
 
