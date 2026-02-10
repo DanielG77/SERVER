@@ -3,6 +3,8 @@ package com.tournaments.infrastructure.persistence.mappers;
 import com.tournaments.domain.model.Tournament;
 import com.tournaments.infrastructure.persistence.entities.TournamentEntity;
 
+import java.util.stream.Collectors;
+
 public class TournamentMapper {
     
     public static Tournament toDomain(TournamentEntity entity) {
@@ -13,14 +15,24 @@ public class TournamentMapper {
             entity.getName(),
             entity.getDescription(),
             entity.getImages(),
-            entity.getStatus(), // ← YA ES TournamentStatus, NO necesita fromString
+            entity.getStatus(),
             entity.getPriceClient(),
             entity.getPricePlayer(),
             entity.getIsActive() != null && entity.getIsActive(),
             entity.getCreatedAt(),
             entity.getStartAt(),
             entity.getEndAt(),
-            entity.getSlug()
+            entity.getSlug(),
+            GameMapper.toDomain(entity.getGame()),
+            TournamentFormatMapper.toDomain(entity.getTournamentFormat()),
+            entity.getIsOnline() != null ? entity.getIsOnline() : true,
+            entity.getMinPlayers(),
+            entity.getMaxPlayers(),
+            entity.getPlatforms() != null ?
+                entity.getPlatforms().stream()
+                    .map(PlatformMapper::toDomain)
+                    .collect(Collectors.toList()) :
+                null
         );
     }
     
@@ -32,7 +44,7 @@ public class TournamentMapper {
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
         entity.setImages(domain.getImages());
-        entity.setStatus(domain.getStatus()); // ← YA ES TournamentStatus
+        entity.setStatus(domain.getStatus());
         entity.setPriceClient(domain.getPriceClient());
         entity.setPricePlayer(domain.getPricePlayer());
         entity.setIsActive(domain.isActive());
@@ -40,7 +52,12 @@ public class TournamentMapper {
         entity.setStartAt(domain.getStartAt());
         entity.setEndAt(domain.getEndAt());
         entity.setSlug(domain.getSlug());
-        
+        entity.setGame(GameMapper.toEntity(domain.getGame()));
+        entity.setTournamentFormat(TournamentFormatMapper.toEntity(domain.getFormat()));
+        entity.setIsOnline(domain.isOnline());
+        entity.setMinPlayers(domain.getMinPlayers());
+        entity.setMaxPlayers(domain.getMaxPlayers());
+                
         return entity;
     }
 }

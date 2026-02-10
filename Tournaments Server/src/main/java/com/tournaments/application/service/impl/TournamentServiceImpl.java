@@ -12,10 +12,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tournaments.application.service.GameService;
+import com.tournaments.application.service.TournamentFormatService;
 import com.tournaments.application.service.TournamentService;
 import com.tournaments.domain.enums.TournamentStatus;
+import com.tournaments.domain.model.Game;
 import com.tournaments.domain.model.Tournament;
 import com.tournaments.domain.model.TournamentFilter;
+import com.tournaments.domain.model.TournamentFormat;
 import com.tournaments.domain.repository.TournamentRepository;
 import com.tournaments.presentation.request.CreateTournamentRequest;
 import com.tournaments.presentation.request.UpdateTournamentRequest;
@@ -25,11 +29,18 @@ import com.tournaments.shared.exceptions.TournamentNotFoundException;
 public class TournamentServiceImpl implements TournamentService {
 
     private final TournamentRepository tournamentRepository;
+    private final GameService gameService;
+    private final TournamentFormatService tournamentFormatService;
     private static final Pattern NONLATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
 
-    public TournamentServiceImpl(TournamentRepository tournamentRepository) {
+    public TournamentServiceImpl(
+            TournamentRepository tournamentRepository,
+            GameService gameService,
+            TournamentFormatService tournamentFormatService) {
         this.tournamentRepository = tournamentRepository;
+        this.gameService = gameService;
+        this.tournamentFormatService = tournamentFormatService;
     }
 
     @Override
@@ -46,16 +57,37 @@ public class TournamentServiceImpl implements TournamentService {
                 .orElseThrow(() -> new TournamentNotFoundException(slug));
     }
 
-
     @Override
     @Transactional
     public Tournament createTournament(CreateTournamentRequest request) {
+        // Validar fechas
         if (request.getStartAt() != null && request.getEndAt() != null) {
             if (request.getEndAt().isBefore(request.getStartAt())) {
                 throw new IllegalArgumentException("End date cannot be before start date");
             }
         }
 
+        // Validar que el juego existe
+        Game game = gameService.getGameById(request.getGameId())
+                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + request.getGameId()));
+
+        // Validar que el formato existe (si se proporciona)
+        TournamentFormat format = null;
+        if (request.getFormatId() != null) {
+            format = tournamentFormatService.getTournamentFormatById(request.getFormatId())
+                    .orElseThrow(() -> new IllegalArgumentException("Tournament format not found with id: " + request.getFormatId()));
+        }
+
+        // Validar número de jugadores
+        if (request.getMinPlayers() != null && request.getMinPlayers() <= 0) {
+            throw new IllegalArgumentException("Minimum players must be greater than 0");
+        }
+        if (request.getMaxPlayers() != null && request.getMinPlayers() != null 
+                && request.getMaxPlayers() < request.getMinPlayers()) {
+            throw new IllegalArgumentException("Maximum players cannot be less than minimum players");
+        }
+
+        // Generar slug
         String slug = request.getSlug();
         if (slug == null || slug.isBlank()) {
             slug = generateSlug(request.getName());
@@ -80,7 +112,14 @@ public class TournamentServiceImpl implements TournamentService {
                 null,
                 request.getStartAt(),
                 request.getEndAt(),
-                slug);
+                slug,
+                game,
+                format,
+                request.getIsOnline() != null ? request.getIsOnline() : true,
+                request.getMinPlayers() != null ? request.getMinPlayers() : 1,
+                request.getMaxPlayers(),
+                null  // Platforms - dejamos para después
+        );
 
         return tournamentRepository.save(tournament);
     }
@@ -114,6 +153,34 @@ public class TournamentServiceImpl implements TournamentService {
                 : existing.getStartAt();
         java.time.LocalDateTime newEndAt = request.getEndAt() != null ? request.getEndAt() : existing.getEndAt();
 
+        // Actualizar juego (si se proporciona)
+        Game newGame = existing.getGame();
+        if (request.getGameId() != null) {
+            newGame = gameService.getGameById(request.getGameId())
+                    .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + request.getGameId()));
+        }
+
+        // Actualizar formato (si se proporciona)
+        TournamentFormat newFormat = existing.getFormat();
+        if (request.getFormatId() != null) {
+            newFormat = tournamentFormatService.getTournamentFormatById(request.getFormatId())
+                    .orElseThrow(() -> new IllegalArgumentException("Tournament format not found with id: " + request.getFormatId()));
+        }
+
+        // Actualizar otros campos
+        boolean newIsOnline = request.getIsOnline() != null ? request.getIsOnline() : existing.isOnline();
+        Integer newMinPlayers = request.getMinPlayers() != null ? request.getMinPlayers() : existing.getMinPlayers();
+        Integer newMaxPlayers = request.getMaxPlayers() != null ? request.getMaxPlayers() : existing.getMaxPlayers();
+
+        // Validar número de jugadores
+        if (newMinPlayers != null && newMinPlayers <= 0) {
+            throw new IllegalArgumentException("Minimum players must be greater than 0");
+        }
+        if (newMaxPlayers != null && newMinPlayers != null && newMaxPlayers < newMinPlayers) {
+            throw new IllegalArgumentException("Maximum players cannot be less than minimum players");
+        }
+
+        // Actualizar slug
         String newSlug = existing.getSlug();
         if (request.getSlug() != null && !request.getSlug().isBlank()) {
             newSlug = request.getSlug();
@@ -138,7 +205,14 @@ public class TournamentServiceImpl implements TournamentService {
                 existing.getCreatedAt(),
                 newStartAt,
                 newEndAt,
-                newSlug);
+                newSlug,
+                newGame,
+                newFormat,
+                newIsOnline,
+                newMinPlayers,
+                newMaxPlayers,
+                existing.getPlatforms()  // Platforms - no se actualiza por ahora
+        );
 
         return tournamentRepository.save(updated);
     }
@@ -163,7 +237,13 @@ public class TournamentServiceImpl implements TournamentService {
                     existing.getCreatedAt(),
                     existing.getStartAt(),
                     existing.getEndAt(),
-                    existing.getSlug());
+                    existing.getSlug(),
+                    existing.getGame(),
+                    existing.getFormat(),
+                    existing.isOnline(),
+                    existing.getMinPlayers(),
+                    existing.getMaxPlayers(),
+                    existing.getPlatforms());
             tournamentRepository.save(softDeleted);
         }
     }

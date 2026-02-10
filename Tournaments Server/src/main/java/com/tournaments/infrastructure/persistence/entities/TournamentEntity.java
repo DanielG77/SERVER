@@ -3,6 +3,7 @@ package com.tournaments.infrastructure.persistence.entities;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -13,9 +14,14 @@ import com.tournaments.domain.enums.TournamentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
@@ -63,12 +69,40 @@ public class TournamentEntity {
     @Column(name = "slug", nullable = false, unique = true)
     private String slug;
 
+    // === NUEVOS CAMPOS Y RELACIONES ===
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id", nullable = false)
+    private GameEntity game;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_format_id")
+    private TournamentFormatEntity tournamentFormat;
+    
+    @Column(name = "is_online", nullable = false)
+    private Boolean isOnline = true;
+    
+    @Column(name = "min_players")
+    private Integer minPlayers = 1;
+    
+    @Column(name = "max_players")
+    private Integer maxPlayers;
+    
+    @ManyToMany
+    @JoinTable(
+        name = "tournament_platforms",
+        joinColumns = @JoinColumn(name = "tournament_id"),
+        inverseJoinColumns = @JoinColumn(name = "platform_id")
+    )
+    private Set<PlatformEntity> platforms;
+
     public TournamentEntity() {
         this.createdAt = LocalDateTime.now();
         this.images = List.of();
     }
 
-    // Getters y setters...
+    // === GETTERS Y SETTERS EXISTENTES ===
+    
     public UUID getId() {
         return id;
     }
@@ -163,6 +197,68 @@ public class TournamentEntity {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    // === GETTERS Y SETTERS NUEVOS ===
+    
+    public GameEntity getGame() {
+        return game;
+    }
+
+    public void setGame(GameEntity game) {
+        this.game = game;
+    }
+
+    public TournamentFormatEntity getTournamentFormat() {
+        return tournamentFormat;
+    }
+
+    public void setTournamentFormat(TournamentFormatEntity tournamentFormat) {
+        this.tournamentFormat = tournamentFormat;
+    }
+
+    public Boolean getIsOnline() {
+        return isOnline;
+    }
+
+    public void setIsOnline(Boolean isOnline) {
+        this.isOnline = isOnline;
+    }
+
+    public Integer getMinPlayers() {
+        return minPlayers;
+    }
+
+    public void setMinPlayers(Integer minPlayers) {
+        this.minPlayers = minPlayers;
+    }
+
+    public Integer getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public void setMaxPlayers(Integer maxPlayers) {
+        this.maxPlayers = maxPlayers;
+    }
+
+    public Set<PlatformEntity> getPlatforms() {
+        return platforms;
+    }
+
+    public void setPlatforms(Set<PlatformEntity> platforms) {
+        this.platforms = platforms;
+    }
+
+    // === MÉTODOS UTILITARIOS ===
+    
+    public void addPlatform(PlatformEntity platform) {
+        this.platforms.add(platform);
+        platform.getTournaments().add(this);
+    }
+    
+    public void removePlatform(PlatformEntity platform) {
+        this.platforms.remove(platform);
+        platform.getTournaments().remove(this);
     }
 
     @PrePersist

@@ -20,20 +20,34 @@ public class Tournament {
     private final LocalDateTime startAt;
     private final LocalDateTime endAt;
     private final String slug;
+    // Nuevos campos para videojuegos
+    private final Game game;
+    private final TournamentFormat format;
+    private final boolean isOnline;
+    private final Integer minPlayers;
+    private final Integer maxPlayers;
+    private final List<Platform> platforms;
 
     public Tournament(
             UUID id,
             String name,
             String description,
             List<String> images,
-            TournamentStatus status, // Cambia de String a TournamentStatus
+            TournamentStatus status,
             BigDecimal priceClient,
             BigDecimal pricePlayer,
             boolean active,
             LocalDateTime createdAt,
             LocalDateTime startAt,
             LocalDateTime endAt,
-            String slug) {
+            String slug,
+            // Nuevos parámetros
+            Game game,
+            TournamentFormat format,
+            boolean isOnline,
+            Integer minPlayers,
+            Integer maxPlayers,
+            List<Platform> platforms) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -46,6 +60,12 @@ public class Tournament {
         this.startAt = startAt;
         this.endAt = endAt;
         this.slug = slug;
+        this.game = game;
+        this.format = format;
+        this.isOnline = isOnline;
+        this.minPlayers = minPlayers;
+        this.maxPlayers = maxPlayers;
+        this.platforms = platforms;
     }
 
     // Getters
@@ -96,4 +116,11 @@ public class Tournament {
     public String getSlug() {
         return slug;
     }
+
+    public Game getGame() { return game; }
+    public TournamentFormat getFormat() { return format; }
+    public boolean isOnline() { return isOnline; }
+    public Integer getMinPlayers() { return minPlayers; }
+    public Integer getMaxPlayers() { return maxPlayers; }
+    public List<Platform> getPlatforms() { return platforms; }
 }

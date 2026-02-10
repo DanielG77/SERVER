@@ -1,12 +1,18 @@
 package com.tournaments.presentation.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class UpdateTournamentRequest {
 
@@ -50,6 +56,26 @@ public class UpdateTournamentRequest {
     @Size(min = 3, max = 50, message = "Slug must be between 3 and 50 characters")
     @JsonProperty("slug")
     private String slug;
+
+        // ===== NUEVOS CAMPOS PARA VIDEOJUEGOS =====
+    
+    @NotNull(message = "Game ID is required")
+    @JsonProperty("game_id")
+    private Long gameId;
+    
+    @JsonProperty("format_id")
+    private Long formatId;
+    
+    @JsonProperty("is_online")
+    private Boolean isOnline = true;
+    
+    @Min(value = 1, message = "Minimum players must be at least 1")
+    @JsonProperty("min_players")
+    private Integer minPlayers = 1;
+    
+    @Min(value = 1, message = "Maximum players must be at least 1")
+    @JsonProperty("max_players")
+    private Integer maxPlayers;
 
     // Getters y Setters
     public String getName() {
@@ -130,5 +156,47 @@ public class UpdateTournamentRequest {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    public Long getGameId() {
+        return gameId;
+    }
+
+    // ===== GETTERS Y SETTERS NUEVOS =====
+
+    public void setGameId(Long gameId) {
+        this.gameId = gameId;
+    }
+
+     public Long getFormatId() {
+        return formatId;
+    }
+
+    public void setFormatId(Long formatId) {
+        this.formatId = formatId;
+    }
+
+    public Boolean getIsOnline() {
+        return isOnline;
+    }
+
+    public void setIsOnline(Boolean isOnline) {
+        this.isOnline = isOnline;
+    }
+
+    public Integer getMinPlayers() {
+        return minPlayers;
+    }
+
+    public void setMinPlayers(Integer minPlayers) {
+        this.minPlayers = minPlayers;
+    }
+
+    public Integer getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public void setMaxPlayers(Integer maxPlayers) {
+        this.maxPlayers = maxPlayers;
     }
 }

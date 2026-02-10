@@ -110,7 +110,7 @@ public class TournamentController {
         return ResponseEntity.ok(ApiResponse.success(tournament));
     }
 
-    @GetMapping("/{slug}")
+    @GetMapping("/slug/{slug}")
     public ResponseEntity<ApiResponse<Tournament>> getBySlug(@PathVariable String slug) {
         Tournament tournament = tournamentService.getTournamentBySlug(slug);
         return ResponseEntity.ok(ApiResponse.success(tournament));
