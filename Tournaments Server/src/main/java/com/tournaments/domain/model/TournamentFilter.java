@@ -11,7 +11,6 @@ public record TournamentFilter(
         LocalDateTime startDateFrom,
         LocalDateTime startDateTo,
         String search,
-        
         // Nuevos filtros para videojuegos
         Long gameId,
         List<Long> genreIds,

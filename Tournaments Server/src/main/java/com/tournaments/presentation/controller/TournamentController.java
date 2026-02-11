@@ -2,6 +2,7 @@ package com.tournaments.presentation.controller;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -61,48 +62,62 @@ public class TournamentController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<java.util.List<Tournament>>> getAll(
+    public ResponseEntity<ApiResponse<List<Tournament>>> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false, name = "is_active", defaultValue = "true") Boolean isActive,
+            @RequestParam(required = false, name = "is_active") Boolean isActive,   // sin defaultValue
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "created_at:desc") String sort) {
+            @RequestParam(defaultValue = "created_at:desc") String sort,
+            
+            // NUEVOS FILTROS
+            @RequestParam(required = false) Long gameId,
+            @RequestParam(required = false) List<Long> genreIds,
+            @RequestParam(required = false) List<Long> platformIds,
+            @RequestParam(required = false) Long formatId,
+            @RequestParam(required = false) Boolean isOnline,
+            @RequestParam(required = false) Integer minPlayers,
+            @RequestParam(required = false) Integer maxPlayers
+    ) {
+        // Ordenación (sin cambios)
+        // System.out.println("genreIds recibido: " + genreIds);
         String[] sortParams = sort.split(":");
         String sortField = sortParams[0];
         String sortDir = sortParams.length > 1 ? sortParams[1] : "desc";
-
-        if (sortField.equals("created_at"))
-            sortField = "createdAt";
-        if (sortField.equals("start_at"))
-            sortField = "startAt";
-
+        if (sortField.equals("created_at")) sortField = "createdAt";
+        if (sortField.equals("start_at")) sortField = "startAt";
         Sort sorting = Sort.by(Sort.Direction.fromString(sortDir), sortField);
         Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, limit, sorting);
 
+        // Convertir status
         TournamentStatus tournamentStatus = null;
         if (status != null) {
             tournamentStatus = TournamentStatus.fromString(status);
         }
 
+        // Construir filtro (lista vacía si es null)
         TournamentFilter filter = new TournamentFilter(
                 tournamentStatus,
                 isActive,
                 from,
                 to,
-                q);
+                q,
+                gameId,
+                genreIds != null ? genreIds : List.of(),
+                platformIds != null ? platformIds : List.of(),
+                formatId,
+                isOnline,
+                minPlayers,
+                maxPlayers
+        );
 
         Page<Tournament> result = tournamentService.getAllTournaments(filter, pageable);
-
-        PaginationMeta meta = new PaginationMeta(
-                result.getTotalElements(),
-                page,
-                limit);
-
+        PaginationMeta meta = new PaginationMeta(result.getTotalElements(), page, limit);
         return ResponseEntity.ok(ApiResponse.success(result.getContent(), meta));
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Tournament>> getById(@PathVariable UUID id) {

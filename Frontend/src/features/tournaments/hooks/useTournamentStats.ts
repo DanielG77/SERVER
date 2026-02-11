@@ -33,8 +33,10 @@ export const useTournamentStats = (autoFetch = true) => {
                 sortBy: 'createdAt',
                 sortOrder: 'desc',
             });
+            console.log("COMPROBACION", response);
 
-            const tournaments = response.items;
+            const tournaments = response?.data ?? [];
+
 
             // Calcular estadísticas
             const byStatus = tournaments.reduce((acc, tournament) => {

@@ -81,12 +81,18 @@ export interface TournamentSortOptions {
 }
 
 export interface PaginatedResponse<T> {
+    success: boolean;
     data: T[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+    meta: {
+        pagination: {
+            total: number;
+            page: number;
+            limit: number;
+        }
+    };
+
 }
+
 
 export interface ApiError {
     message: string;

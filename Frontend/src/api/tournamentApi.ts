@@ -9,7 +9,7 @@ import {
 } from '../types';
 
 // Configuración base de la API
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://localhost:8080/';
 const API_TIMEOUT = 10000;
 
 // Crear instancia de axios con configuración personalizada
@@ -109,7 +109,7 @@ export const tournamentApi = {
         params?: TournamentListParams
     ): Promise<PaginatedResponse<Tournament>> => {
         try {
-            const response: AxiosResponse<PaginatedResponse<Tournament>> = await apiClient.get('/api/tournaments', {
+            const response: AxiosResponse<PaginatedResponse<Tournament>> = await apiClient.get('tournaments', {
                 params: {
                     page: params?.page || 1,
                     limit: params?.limit || 10,
@@ -130,7 +130,7 @@ export const tournamentApi = {
      */
     getTournamentById: async (id: string): Promise<Tournament> => {
         try {
-            const response: AxiosResponse<Tournament> = await apiClient.get(`/api/tournaments/${id}`);
+            const response: AxiosResponse<Tournament> = await apiClient.get(`tournaments/${id}`);
             return response.data;
         } catch (error) {
             console.error(`Error fetching tournament ${id}:`, error);
@@ -143,7 +143,7 @@ export const tournamentApi = {
      */
     getTournamentBySlug: async (slug: string): Promise<Tournament> => {
         try {
-            const response: AxiosResponse<Tournament> = await apiClient.get(`/api/tournaments/${slug}`);
+            const response: AxiosResponse<Tournament> = await apiClient.get(`tournaments/${slug}`);
             return response.data;
         } catch (error) {
             console.error(`Error fetching tournament by slug ${slug}:`, error);
@@ -156,7 +156,7 @@ export const tournamentApi = {
      */
     createTournament: async (data: CreateTournamentDto): Promise<Tournament> => {
         try {
-            const response: AxiosResponse<Tournament> = await apiClient.post('/tournaments', data);
+            const response: AxiosResponse<Tournament> = await apiClient.post('tournaments', data);
             return response.data;
         } catch (error) {
             console.error('Error creating tournament:', error);
@@ -169,7 +169,7 @@ export const tournamentApi = {
      */
     updateTournament: async (id: string, data: Partial<CreateTournamentDto>): Promise<Tournament> => {
         try {
-            const response: AxiosResponse<Tournament> = await apiClient.put(`/tournaments/${id}`, data);
+            const response: AxiosResponse<Tournament> = await apiClient.put(`tournaments/${id}`, data);
             return response.data;
         } catch (error) {
             console.error(`Error updating tournament ${id}:`, error);
@@ -182,7 +182,7 @@ export const tournamentApi = {
      */
     deleteTournament: async (id: string): Promise<void> => {
         try {
-            await apiClient.delete(`/tournaments/${id}`);
+            await apiClient.delete(`tournaments/${id}`);
         } catch (error) {
             console.error(`Error deleting tournament ${id}:`, error);
             throw error;
@@ -215,7 +215,7 @@ export const tournamentApi = {
         params?: Omit<TournamentListParams, 'search'>
     ): Promise<PaginatedResponse<Tournament>> => {
         try {
-            const response: AxiosResponse<PaginatedResponse<Tournament>> = await apiClient.get('/tournaments/search', {
+            const response: AxiosResponse<PaginatedResponse<Tournament>> = await apiClient.get('tournaments/search', {
                 params: {
                     term,
                     ...params,
@@ -236,7 +236,7 @@ export const tournamentApi = {
         params?: Omit<TournamentListParams, 'status'>
     ): Promise<PaginatedResponse<Tournament>> => {
         try {
-            const response: AxiosResponse<PaginatedResponse<Tournament>> = await apiClient.get(`/tournaments/status/${status}`, {
+            const response: AxiosResponse<PaginatedResponse<Tournament>> = await apiClient.get(`tournaments/status/${status}`, {
                 params,
             });
             return response.data;

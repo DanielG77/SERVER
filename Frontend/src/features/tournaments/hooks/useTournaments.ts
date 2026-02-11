@@ -127,7 +127,7 @@ export const useTournaments = (options: UseTournamentsOptions = {}) => {
     }, []);
 
     // Valores computados
-    const tournaments = useMemo(() => data?.items || [], [data]);
+    const tournaments = useMemo(() => data?.data || [], [data]);
     const totalItems = useMemo(() => data?.total || 0, [data]);
     const totalPages = useMemo(() => data?.totalPages || 1, [data]);
     const hasNextPage = useMemo(() => page < totalPages, [page, totalPages]);

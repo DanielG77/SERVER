@@ -71,13 +71,13 @@ const Home: React.FC = () => {
     return (
         <div className="min-h-screen bg-dark overflow-hidden">
             {/* Hero Section */}
-            <section className="relative overflow-hidden animated-gradient particles min-h-[90vh] flex items-center">
-                {/* Efecto de partículas y grid */}
+            {/* <section className="relative overflow-hidden animated-gradient particles min-h-[90vh] flex items-center">
+                //  Efecto de partículas y grid
                 <div className="absolute inset-0 bg-grid-animated opacity-20" />
                 <div className="absolute top-10 left-10 w-72 h-72 bg-neon-blue/10 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" />
                 <div className="absolute bottom-10 right-10 w-72 h-72 bg-neon-pink/10 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float" style={{ animationDelay: '2s' }} />
 
-                {/* Escaneo effect */}
+                Escaneo effect
                 <div className="absolute inset-0 scanlines" />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 z-10">
@@ -130,7 +130,7 @@ const Home: React.FC = () => {
                             </Button>
                         </div>
 
-                        {/* Stats mini en hero */}
+                        Stats mini en hero
                         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
                             {[
                                 { value: stats?.total || 0, label: 'Torneos', icon: '🏆', color: 'neon-blue' },
@@ -147,7 +147,7 @@ const Home: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             {/* Stats Section */}
             {/* <section className="py-16 px-4 sm:px-6 lg:px-8 scroll-section">
@@ -234,7 +234,7 @@ const Home: React.FC = () => {
             </section> */}
 
             {/* Featured Tournaments */}
-            {/* <section className="py-16 px-4 sm:px-6 lg:px-8 bg-dark-light/50 scroll-section">
+            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-dark-light/50 scroll-section">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
                         <div>
@@ -265,7 +265,7 @@ const Home: React.FC = () => {
                         emptyMessage="No hay torneos destacados en este momento"
                     />
                 </div>
-            </section> */}
+            </section>
 
             {/* Game Categories */}
             {/* <section className="py-16 px-4 sm:px-6 lg:px-8 scroll-section">
