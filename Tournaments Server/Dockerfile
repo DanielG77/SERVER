@@ -1,30 +1,34 @@
-# ==================== BUILD STAGE ====================
+# Stage 1: Build
 FROM maven:3.9-eclipse-temurin-21 AS builder
-WORKDIR /build
+WORKDIR /app
+
+# Copiar dependencias primero para cache
 COPY pom.xml .
-# Download dependencies (cache layer)
 RUN mvn dependency:go-offline -B
+
+# Copiar código fuente
 COPY src ./src
-RUN mvn clean package -DskipTests -Dspring.profiles.active=dev
 
-# ==================== DEVELOPMENT STAGE ====================
-FROM eclipse-temurin:21-jdk-alpine AS dev
-WORKDIR /app
-RUN apk add --no-cache maven
-COPY . .
-# Expose ports: 8080 for app, 5005 for debug
-EXPOSE 8080 5005
-# Command for development (hot reload)
-CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+# Construir la app
+RUN mvn clean package -DskipTests
 
-# ==================== PRODUCTION STAGE ====================
-FROM eclipse-temurin:21-jre-alpine AS prod
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+
+# Crear usuario no-root
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
-COPY --from=builder /build/target/*.jar app.jar
+
+# Copiar jar compilado
+COPY --from=builder /app/target/*.jar app.jar
+
+# Exponer puerto
 EXPOSE 8080
+
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/actuator/health || exit 1
-# Run application
+  CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Entrypoint
 ENTRYPOINT ["java", "-jar", "app.jar"]

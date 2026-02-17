@@ -1,10 +1,9 @@
 package com.tournaments.infrastructure.persistence.mappers;
 
+import java.util.stream.Collectors;
+
 import com.tournaments.domain.model.Game;
 import com.tournaments.infrastructure.persistence.entities.GameEntity;
-import com.tournaments.infrastructure.persistence.entities.GenreEntity;
-
-import java.util.stream.Collectors;
 
 public class GameMapper {
     

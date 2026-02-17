@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.local
+docker-compose*.yml
+.id/
+.idea/
+*.log
+**/node_modules/
+**/target/
+**/build/
+**/dist/
