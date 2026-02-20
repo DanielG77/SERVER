@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -29,46 +31,48 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
+
         // Permitir los orígenes que necesites (para desarrollo, localhost:5173)
         configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:3000", // Por si usas otro puerto
-            "http://localhost:8080"  // Por si tienes otro frontend
+                "http://localhost:5173",
+                "http://localhost:3000", // Por si usas otro puerto
+                "http://localhost:8080" // Por si tienes otro frontend
         ));
-        
+
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
-        ));
-        
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"));
+
         // Headers permitidos
         configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers",
-            "Cache-Control"
-        ));
-        
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "Cache-Control"));
+
         // Headers expuestos en la respuesta
         configuration.setExposedHeaders(Arrays.asList(
-            "Access-Control-Allow-Origin",
-            "Access-Control-Allow-Credentials"
-        ));
-        
+                "Access-Control-Allow-Origin",
+                "Access-Control-Allow-Credentials"));
+
         // Permitir credenciales (cookies, autenticación)
         configuration.setAllowCredentials(true);
-        
+
         // Tiempo de cache para preflight requests (en segundos)
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Aplicar a todas las rutas
-        
+
         return source;
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
