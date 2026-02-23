@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Transición suave para el carrusel hero (fade) */
+.hero-fade {
+    transition: opacity 0.7s ease-in-out;
+}
+
+/* Ocultar scrollbar en carruseles horizontales (chrome/safari/edge) */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* Efecto de overlay sutil sobre imágenes del hero */
+.hero-overlay::after {
+    content: '';
+    @apply absolute inset-0 bg-black/40;
+    pointer-events: none;
+}
+
+/* Botones con foco visible accesible */
+button:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-indigo-400;
+}

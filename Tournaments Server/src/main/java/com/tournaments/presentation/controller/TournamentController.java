@@ -5,10 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -27,6 +23,8 @@ import com.tournaments.application.service.TournamentService;
 import com.tournaments.domain.enums.TournamentStatus;
 import com.tournaments.domain.model.Tournament;
 import com.tournaments.domain.model.TournamentFilter;
+import com.tournaments.domain.pagination.DomainPage;
+import com.tournaments.domain.pagination.PageableRequest;
 import com.tournaments.presentation.request.CreateTournamentRequest;
 import com.tournaments.presentation.request.UpdateTournamentRequest;
 import com.tournaments.presentation.response.ApiResponse;
@@ -66,38 +64,45 @@ public class TournamentController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false, name = "is_active") Boolean isActive,   // sin defaultValue
+            @RequestParam(required = false, name = "is_active") Boolean isActive,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "created_at:desc") String sort,
-            
-            // NUEVOS FILTROS
+
+            // Additional filters
             @RequestParam(required = false) Long gameId,
             @RequestParam(required = false) List<Long> genreIds,
             @RequestParam(required = false) List<Long> platformIds,
             @RequestParam(required = false) Long formatId,
             @RequestParam(required = false) Boolean isOnline,
             @RequestParam(required = false) Integer minPlayers,
-            @RequestParam(required = false) Integer maxPlayers
-    ) {
-        // Ordenación (sin cambios)
-        // System.out.println("genreIds recibido: " + genreIds);
+            @RequestParam(required = false) Integer maxPlayers) {
+        // Parse sort param: "created_at:desc" → field + direction
         String[] sortParams = sort.split(":");
         String sortField = sortParams[0];
-        String sortDir = sortParams.length > 1 ? sortParams[1] : "desc";
-        if (sortField.equals("created_at")) sortField = "createdAt";
-        if (sortField.equals("start_at")) sortField = "startAt";
-        Sort sorting = Sort.by(Sort.Direction.fromString(sortDir), sortField);
-        Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, limit, sorting);
+        String sortDir = sortParams.length > 1 ? sortParams[1] : PageableRequest.DEFAULT_SORT_DIRECTION;
 
-        // Convertir status
+        // Map snake_case API field names → camelCase JPA field names
+        if (sortField.equals("created_at"))
+            sortField = "createdAt";
+        if (sortField.equals("start_at"))
+            sortField = "startAt";
+
+        // Build domain pagination request (convert 1-based page to 0-based)
+        PageableRequest pageableRequest = new PageableRequest(
+                page > 0 ? page - 1 : 0,
+                limit,
+                sortField,
+                sortDir);
+
+        // Convert status query param
         TournamentStatus tournamentStatus = null;
         if (status != null) {
             tournamentStatus = TournamentStatus.fromString(status);
         }
 
-        // Construir filtro (lista vacía si es null)
+        // Build filter
         TournamentFilter filter = new TournamentFilter(
                 tournamentStatus,
                 isActive,
@@ -110,14 +115,12 @@ public class TournamentController {
                 formatId,
                 isOnline,
                 minPlayers,
-                maxPlayers
-        );
+                maxPlayers);
 
-        Page<Tournament> result = tournamentService.getAllTournaments(filter, pageable);
+        DomainPage<Tournament> result = tournamentService.getAllTournaments(filter, pageableRequest);
         PaginationMeta meta = new PaginationMeta(result.getTotalElements(), page, limit);
         return ResponseEntity.ok(ApiResponse.success(result.getContent(), meta));
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Tournament>> getById(@PathVariable UUID id) {

@@ -1,19 +1,25 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { HomePage } from '../pages/HomePage';
 import { ShopPage } from '../pages/ShopPage';
+import { MainLayout } from '../components/Layout';
 
 const router = createBrowserRouter([
     {
-        path: '/',
-        element: <HomePage />,
-    },
-    {
-        path: '/home',
-        element: <HomePage />,
-    },
-    {
-        path: '/shop',
-        element: <ShopPage />,
+        element: <MainLayout />, // 👈 layout global
+        children: [
+            {
+                path: '/',
+                element: <HomePage />,
+            },
+            {
+                path: '/home',
+                element: <HomePage />,
+            },
+            {
+                path: '/shop',
+                element: <ShopPage />,
+            },
+        ],
     },
 ]);
 

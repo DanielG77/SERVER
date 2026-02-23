@@ -41,6 +41,11 @@ export interface Tournament {
     online: boolean;
 }
 
+export interface Category {
+    id: number;
+    name: string;
+}
+
 // DTO de respuesta (con el wrapper ApiResponse)
 import { ApiResponse } from '../types/api.types';
 export type TournamentsResponse = ApiResponse<Tournament[]>;

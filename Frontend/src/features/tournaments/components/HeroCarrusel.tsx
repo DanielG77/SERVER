@@ -1,85 +1,106 @@
 import { useState, useEffect } from 'react';
-
-type Slide = {
-    id: string;
-    title: string;
-    subtitle: string;
-    image: string;
-    cta?: string;
-};
-
-const SLIDES: Slide[] = [
-    {
-        id: '1',
-        title: 'Compite en los torneos más grandes',
-        subtitle: 'Descubre eventos activos en PC, PlayStation y Xbox',
-        image:
-            'https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?q=80&w=1920&auto=format&fit=crop',
-        cta: 'Explorar torneos',
-    },
-    {
-        id: '2',
-        title: 'Los últimos torneos añadidos',
-        subtitle: 'Mantente al día con los eventos más recientes',
-        image:
-            'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format&fit=crop',
-        cta: 'Ver últimos torneos',
-    },
-    {
-        id: '3',
-        title: 'Juega en tu plataforma favorita',
-        subtitle: 'PC, PlayStation, Xbox y más',
-        image:
-            'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1920&auto=format&fit=crop',
-        cta: 'Ver plataformas',
-    },
-];
+import { useGamesContext } from '@/contexts/GamesContext';
+import { API_BASE_URL } from '@/shared/api/endpoints';
 
 export default function HeroCarousel() {
-    const [current, setCurrent] = useState<number>(0);
+    const { games, isLoading, error } = useGamesContext();
+    const [current, setCurrent] = useState(0);
 
+    // Auto play
     useEffect(() => {
+        if (!games || games.length === 0) return;
         const interval = setInterval(() => {
-            setCurrent((prev: number) => (prev + 1) % SLIDES.length);
+            setCurrent((prev) => (prev + 1) % games.length);
         }, 5000);
-
         return () => clearInterval(interval);
-    }, []);
+    }, [games]);
 
-    const slide = SLIDES[current];
+    const goToSlide = (index: number) => setCurrent(index);
+    const prevSlide = () =>
+        setCurrent((prev) => (prev - 1 + (games?.length || 0)) % (games?.length || 1));
+    const nextSlide = () =>
+        setCurrent((prev) => (prev + 1) % (games?.length || 1));
+
+    if (isLoading) {
+        return (
+            <section className="relative h-screen w-full overflow-hidden bg-gray-900 flex items-center justify-center">
+                <div className="text-white text-xl">Cargando juegos...</div>
+            </section>
+        );
+    }
+
+    if (error || !games || games.length === 0) {
+        return (
+            <section className="relative h-screen w-full overflow-hidden bg-gray-900 flex items-center justify-center">
+                <div className="text-white text-xl">No hay juegos disponibles</div>
+            </section>
+        );
+    }
 
     return (
-        <section className="relative h-[75vh] w-full overflow-hidden">
-            <img
-                src={slide.image}
-                alt={slide.title}
-                className="absolute inset-0 h-full w-full object-cover"
-            />
-
-            <div className="absolute inset-0 bg-black/50" />
-
-            <div className="relative z-10 h-full flex items-center">
-                <div className="max-w-7xl mx-auto px-6 text-white">
-                    <h1 className="text-4xl md:text-6xl font-bold max-w-3xl leading-tight">
-                        {slide.title}
-                    </h1>
-                    <p className="mt-6 text-lg md:text-xl text-white/90 max-w-2xl">
-                        {slide.subtitle}
-                    </p>
-
-                    <button className="mt-8 px-6 py-3 rounded-xl bg-white text-slate-900 font-medium hover:bg-gray-100 transition-colors">
-                        {slide.cta}
-                    </button>
-                </div>
+        <section className="relative h-screen w-full overflow-hidden" aria-label="Carrusel de juegos">
+            <div className="relative h-full w-full">
+                {games.map((game, index) => (
+                    <div
+                        key={game.id}
+                        className={`absolute inset-0 hero-fade transition-opacity duration-700 ease-in-out ${index === current ? 'opacity-100' : 'opacity-0'
+                            }`}
+                        data-index={index}
+                        aria-hidden={index !== current}
+                    >
+                        <div
+                            className="absolute inset-0 bg-cover bg-center"
+                            style={{ backgroundImage: `url('${API_BASE_URL}${game.iconUrl}')` }}
+                        />
+                        <div className="hero-overlay absolute inset-0" />
+                        <div className="relative z-10 flex flex-col items-center justify-center h-full text-white px-4 text-center pt-16">
+                            <h2 className="text-4xl md:text-6xl font-extrabold mb-4 drop-shadow-lg">
+                                {game.name}
+                            </h2>
+                            <p className="text-xl md:text-2xl mb-8 max-w-2xl drop-shadow-md">
+                                {game.description}
+                            </p>
+                            <a
+                                href={`/juegos/${game.id}`}
+                                className="bg-blue-800 hover:bg-blue-900 text-white font-semibold px-8 py-4 rounded-full text-lg transition shadow-xl"
+                            >
+                                Ver torneos
+                            </a>
+                        </div>
+                    </div>
+                ))}
             </div>
 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-                {SLIDES.map((_, index) => (
+            {/* Botones anterior/siguiente */}
+            <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition focus:outline-none focus:ring-2 focus:ring-white"
+                aria-label="Slide anterior"
+            >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+            <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition focus:outline-none focus:ring-2 focus:ring-white"
+                aria-label="Siguiente slide"
+            >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+
+            {/* Dots indicadores */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+                {games.map((_, index) => (
                     <button
                         key={index}
-                        onClick={() => setCurrent(index)}
-                        className={`h-2 w-8 rounded-full transition-all ${index === current ? 'bg-white' : 'bg-white/40'
+                        onClick={() => goToSlide(index)}
+                        className={`w-3 h-3 rounded-full transition focus:outline-none focus:ring-2 focus:ring-white ${index === current ? 'bg-white/80' : 'bg-white/40 hover:bg-white/80'
                             }`}
+                        aria-label={`Ir a slide ${index + 1}`}
+                        aria-current={index === current ? 'true' : undefined}
                     />
                 ))}
             </div>

@@ -1,3 +1,4 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,7 +8,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Colores vívidos para torneos
+        // Asegurar que blue-950 esté disponible (valor estándar de Tailwind)
+        blue: {
+          950: '#172554', // Puedes ajustar este tono si lo deseas
+        },
+        // Tus colores vivid (opcional, no afectan al diseño)
         vivid: {
           blue: '#3b82f6',
           green: '#22c55e',
@@ -16,7 +21,7 @@ export default {
           purple: '#a855f7',
           pink: '#ec4899',
           orange: '#f97316',
-        }
+        },
       },
     },
   },

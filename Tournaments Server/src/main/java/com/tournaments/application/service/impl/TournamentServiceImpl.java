@@ -7,8 +7,8 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.tournaments.domain.pagination.DomainPage;
+import com.tournaments.domain.pagination.PageableRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,14 +75,15 @@ public class TournamentServiceImpl implements TournamentService {
         TournamentFormat format = null;
         if (request.getFormatId() != null) {
             format = tournamentFormatService.getTournamentFormatById(request.getFormatId())
-                    .orElseThrow(() -> new IllegalArgumentException("Tournament format not found with id: " + request.getFormatId()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Tournament format not found with id: " + request.getFormatId()));
         }
 
         // Validar número de jugadores
         if (request.getMinPlayers() != null && request.getMinPlayers() <= 0) {
             throw new IllegalArgumentException("Minimum players must be greater than 0");
         }
-        if (request.getMaxPlayers() != null && request.getMinPlayers() != null 
+        if (request.getMaxPlayers() != null && request.getMinPlayers() != null
                 && request.getMaxPlayers() < request.getMinPlayers()) {
             throw new IllegalArgumentException("Maximum players cannot be less than minimum players");
         }
@@ -118,7 +119,7 @@ public class TournamentServiceImpl implements TournamentService {
                 request.getIsOnline() != null ? request.getIsOnline() : true,
                 request.getMinPlayers() != null ? request.getMinPlayers() : 1,
                 request.getMaxPlayers(),
-                null  // Platforms - dejamos para después
+                null // Platforms - dejamos para después
         );
 
         return tournamentRepository.save(tournament);
@@ -126,8 +127,8 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Tournament> getAllTournaments(TournamentFilter filter, Pageable pageable) {
-        return tournamentRepository.findAll(filter, pageable);
+    public DomainPage<Tournament> getAllTournaments(TournamentFilter filter, PageableRequest pageableRequest) {
+        return tournamentRepository.findAll(filter, pageableRequest);
     }
 
     @Override
@@ -164,7 +165,8 @@ public class TournamentServiceImpl implements TournamentService {
         TournamentFormat newFormat = existing.getFormat();
         if (request.getFormatId() != null) {
             newFormat = tournamentFormatService.getTournamentFormatById(request.getFormatId())
-                    .orElseThrow(() -> new IllegalArgumentException("Tournament format not found with id: " + request.getFormatId()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Tournament format not found with id: " + request.getFormatId()));
         }
 
         // Actualizar otros campos
@@ -211,7 +213,7 @@ public class TournamentServiceImpl implements TournamentService {
                 newIsOnline,
                 newMinPlayers,
                 newMaxPlayers,
-                existing.getPlatforms()  // Platforms - no se actualiza por ahora
+                existing.getPlatforms() // Platforms - no se actualiza por ahora
         );
 
         return tournamentRepository.save(updated);
