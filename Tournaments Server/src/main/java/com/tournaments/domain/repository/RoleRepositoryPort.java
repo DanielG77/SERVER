@@ -2,11 +2,9 @@ package com.tournaments.domain.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.tournaments.domain.model.Role;
 
-public interface RoleRepository extends JpaRepository<Role, Long> {
-
+public interface RoleRepositoryPort {
     Optional<Role> findByName(String name);
+    Role save(Role role);
 }

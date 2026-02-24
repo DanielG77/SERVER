@@ -1,4 +1,4 @@
-package com.tournaments.application.service;
+package com.tournaments.domain.service;
 
 import com.tournaments.domain.model.User;
 

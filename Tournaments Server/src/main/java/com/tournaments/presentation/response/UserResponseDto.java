@@ -1,46 +1,28 @@
-package com.tournaments.domain.model;
+package com.tournaments.presentation.response;
 
-import java.time.OffsetDateTime;
 import java.util.Set;
 
-public class User {
+public class UserResponseDto {
 
     private Long id;
-
     private String username;
-
     private String email;
-
-    private String password; // hash
-
     private boolean enabled;
+    private String createdAt;
+    private Set<String> roles;
 
-    private OffsetDateTime createdAt;
+    public UserResponseDto() {}
 
-    private Set<Role> roles;
-
-    public User() {}
-
-    public User(Long id, String username, String email, String password,
-                boolean enabled, OffsetDateTime createdAt, Set<Role> roles) {
+    public UserResponseDto(Long id, String username, String email, boolean enabled, String createdAt, Set<String> roles) {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.password = password;
         this.enabled = enabled;
         this.createdAt = createdAt;
         this.roles = roles;
     }
 
-    public User(String username, String email, String password, boolean enabled) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.enabled = enabled;
-    }
-
-
-    // Getters y Setters
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -65,14 +47,6 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -81,19 +55,19 @@ public class User {
         this.enabled = enabled;
     }
 
-    public OffsetDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Set<Role> getRoles() {
+    public Set<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 }

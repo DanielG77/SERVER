@@ -1,28 +1,54 @@
-package com.tournaments.domain.model;
+package com.tournaments.infrastructure.persistence.entities;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
 
-public class User {
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "users")
+public class UserEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
     private String password; // hash
 
+    @Column(nullable = false)
     private boolean enabled;
 
+    @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
-    private Set<Role> roles;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> roles;
 
-    public User() {}
+    public UserEntity() {}
 
-    public User(Long id, String username, String email, String password,
-                boolean enabled, OffsetDateTime createdAt, Set<Role> roles) {
+    public UserEntity(Long id, String username, String email, String password,
+                boolean enabled, OffsetDateTime createdAt, Set<RoleEntity> roles) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -32,13 +58,12 @@ public class User {
         this.roles = roles;
     }
 
-    public User(String username, String email, String password, boolean enabled) {
+    public UserEntity(String username, String email, String password, boolean enabled) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.enabled = enabled;
     }
-
 
     // Getters y Setters
     public Long getId() {
@@ -89,11 +114,11 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public Set<Role> getRoles() {
+    public Set<RoleEntity> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
+    public void setRoles(Set<RoleEntity> roles) {
         this.roles = roles;
     }
 }
