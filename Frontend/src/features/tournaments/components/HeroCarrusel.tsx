@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useGamesContext } from '@/contexts/GamesContext';
-import { API_BASE_URL } from '@/shared/api/endpoints';
+import { useGames } from '../../../context/GamesContext';
+import { API_BASE_URL } from '../../../shared/api/endpoints';
 
 export default function HeroCarousel() {
-    const { games, isLoading, error } = useGamesContext();
+    const { games, isLoading, error } = useGames();
     const [current, setCurrent] = useState(0);
 
     // Auto play

@@ -1,6 +1,6 @@
 // src/features/tournaments/queries/useTournamentsPaginated.query.ts
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { apiClient } from '@/shared/api/client';
+import apiClient from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints';
 import { TournamentsResponse } from '../../../shared/types/tournament.types';
 

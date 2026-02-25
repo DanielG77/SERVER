@@ -32,6 +32,18 @@ public class CtrlUser {
         this.getUserByUsernameUseCase = getUserByUsernameUseCase;
     }
 
+    // Endpoint para obtener el perfil del usuario autenticado
+    @GetMapping("/profile")
+    public ResponseEntity<?> getCurrentUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null || !(userDetails instanceof CustomUserDetails)) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Long userId = ((CustomUserDetails) userDetails).getId();
+        UserDto user = getUserUseCase.execute(userId);
+        return ResponseEntity.ok(UserSerializer.serialize(user, userId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id, 
                                     @AuthenticationPrincipal UserDetails userDetails) {

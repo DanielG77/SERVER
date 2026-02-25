@@ -9,6 +9,7 @@ public class RefreshToken {
     private Long userId;
     private OffsetDateTime expiryDate;
     private OffsetDateTime createdAt;
+    private Boolean revoked;
 
     public RefreshToken() {}
 
@@ -18,6 +19,16 @@ public class RefreshToken {
         this.userId = userId;
         this.expiryDate = expiryDate;
         this.createdAt = createdAt;
+        this.revoked = false;
+    }
+
+    public RefreshToken(Long id, String token, Long userId, OffsetDateTime expiryDate, OffsetDateTime createdAt, Boolean revoked) {
+        this.id = id;
+        this.token = token;
+        this.userId = userId;
+        this.expiryDate = expiryDate;
+        this.createdAt = createdAt;
+        this.revoked = revoked;
     }
 
     // Getters and Setters
@@ -59,5 +70,13 @@ public class RefreshToken {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Boolean getRevoked() {
+        return revoked;
+    }
+
+    public void setRevoked(Boolean revoked) {
+        this.revoked = revoked;
     }
 }

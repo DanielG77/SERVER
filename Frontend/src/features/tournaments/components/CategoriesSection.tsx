@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useCategoriesContext } from '@/contexts/CategoriesContext';
+import { useCategories } from '../../../context/CategoriesContext';
 
 // Mapa de imágenes placeholder por categoría (podría ser una función que asigne según el nombre)
 const getCategoryImage = (categoryName: string): string => {
@@ -16,7 +16,7 @@ const getCategoryImage = (categoryName: string): string => {
 };
 
 export const CategoriesSection = () => {
-    const { categories, isLoading, error } = useCategoriesContext();
+    const { categories, isLoading, error } = useCategories();
     const carouselRef = useRef<HTMLDivElement>(null);
 
     const scroll = (direction: 'left' | 'right') => {

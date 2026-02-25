@@ -1,4 +1,5 @@
--- src/main/resources/db/migration/V1__create_users_and_roles.sql
+-- V6__User_ForAuth.sql
+-- Crear tablas necesarias para el sistema de autenticación con JWT
 
 -- 1) Roles
 CREATE TABLE IF NOT EXISTS roles (
@@ -27,15 +28,19 @@ CREATE TABLE IF NOT EXISTS user_roles (
   CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
 );
 
--- 4) (Opcional) refresh tokens (si los vas a usar)
+-- 4) Refresh tokens con campo revoked (blacklist)
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id BIGSERIAL PRIMARY KEY,
   token VARCHAR(512) NOT NULL UNIQUE,
   user_id BIGINT NOT NULL,
   expiry_date TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  revoked BOOLEAN DEFAULT FALSE,
   CONSTRAINT fk_refresh_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+-- Agregar columna revoked si no existe (idempotent para migraciones posteriores)
+ALTER TABLE IF EXISTS refresh_tokens ADD COLUMN IF NOT EXISTS revoked BOOLEAN DEFAULT FALSE;
 
 -- 5) Inserción de roles base
 INSERT INTO roles (name, description)
@@ -43,10 +48,10 @@ VALUES ('ROLE_ADMIN', 'Administrador con todos los privilegios'),
        ('ROLE_CLIENT', 'Usuario cliente normal')
 ON CONFLICT (name) DO NOTHING;
 
--- 6) Inserción de ejemplo de usuario
--- IMPORTANTE: sustituye '<BCRYPT_PASSWORD_HASH>' por el hash bcrypt real.
+-- 6) Inserción de usuario de prueba
+-- Password: 'admin123' (bcrypt hash)
 INSERT INTO users (username, email, password, enabled)
-VALUES ('admin', 'admin@example.com', '<BCRYPT_PASSWORD_HASH>', true)
+VALUES ('admin', 'admin@example.com', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', true)
 ON CONFLICT (username) DO NOTHING;
 
 -- Asignar rol admin al usuario creado

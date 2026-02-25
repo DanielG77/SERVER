@@ -1,6 +1,6 @@
 import { useRef } from 'react';
-import { useTournamentsContext } from '@/contexts/TournamentsContext';
-import { API_BASE_URL } from '@/shared/api/endpoints';
+import { useTournamentsContext } from '../../../context/TournamentsContext';
+import { API_BASE_URL } from '../../../shared/api/endpoints';
 
 const formatDate = (isoString: string): string => {
     const date = new Date(isoString);
@@ -79,7 +79,7 @@ export const RecentTournamentsSection = () => {
                             ? `${API_BASE_URL}${tournament.images[0]}`
                             : 'https://www.antevenio.com/wp-content/uploads/2021/03/events-esports.png';
 
-                        const startDate = formatDate(tournament.startAt);
+                        const startAt = formatDate(tournament.startAt);
                         const prize = tournament.priceClient ? `${tournament.priceClient.toFixed(2)} €` : '—';
 
                         return (
@@ -100,7 +100,7 @@ export const RecentTournamentsSection = () => {
                                     <p className="text-sm text-gray-600">
                                         {tournament.game.name} · {tournament.format?.name || 'Formato libre'}
                                     </p>
-                                    <p className="text-sm text-gray-600 mt-1">📅 {startDate}</p>
+                                    <p className="text-sm text-gray-600 mt-1">📅 {startAt}</p>
                                     <p className="text-green-400 font-semibold mt-1">💰 {prize}</p>
                                     <button
                                         className="mt-3 w-full bg-green-400 hover:bg-green-500 text-gray-900 font-medium py-2 rounded-lg transition"

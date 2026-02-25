@@ -1,5 +1,6 @@
 package com.tournaments.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.tournaments.domain.model.RefreshToken;
@@ -7,6 +8,10 @@ import com.tournaments.domain.model.RefreshToken;
 public interface RefreshTokenRepositoryPort {
 
     Optional<RefreshToken> findByToken(String token);
+
+    List<RefreshToken> findByUserId(Long userId);
+
+    List<RefreshToken> findByUserIdAndRevokedFalse(Long userId);
 
     RefreshToken save(RefreshToken refreshToken);
 

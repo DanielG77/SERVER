@@ -14,11 +14,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtils implements JwtProviderPort {
 
-    @Value("${JWT_SECRET}")
+    @Value("${jwt.secret:7nUKECHD/E0L/HKT1Zj4tUbKLGZtvbcIOQkCCwrbrGc=}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration}")
-    private int jwtExpirationMs;
+    @Value("${jwt.access-token.expiration:3600000}")
+    private long accessTokenExpirationMs;
 
     @Override
     public String generateToken(String subject, String[] roles) {
@@ -26,7 +26,7 @@ public class JwtUtils implements JwtProviderPort {
                 .setSubject(subject)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setExpiration(new Date((new Date()).getTime() + accessTokenExpirationMs))
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
     }

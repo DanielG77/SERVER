@@ -29,6 +29,9 @@ public class RefreshTokenEntity {
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
+    @Column(name = "revoked", nullable = false)
+    private Boolean revoked = false;
+
     public RefreshTokenEntity() {}
 
     public RefreshTokenEntity(Long id, String token, Long userId, OffsetDateTime expiryDate, OffsetDateTime createdAt) {
@@ -37,6 +40,16 @@ public class RefreshTokenEntity {
         this.userId = userId;
         this.expiryDate = expiryDate;
         this.createdAt = createdAt;
+        this.revoked = false;
+    }
+
+    public RefreshTokenEntity(Long id, String token, Long userId, OffsetDateTime expiryDate, OffsetDateTime createdAt, Boolean revoked) {
+        this.id = id;
+        this.token = token;
+        this.userId = userId;
+        this.expiryDate = expiryDate;
+        this.createdAt = createdAt;
+        this.revoked = revoked;
     }
 
     // Getters and Setters
@@ -78,5 +91,13 @@ public class RefreshTokenEntity {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Boolean getRevoked() {
+        return revoked;
+    }
+
+    public void setRevoked(Boolean revoked) {
+        this.revoked = revoked;
     }
 }

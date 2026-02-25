@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../shared/api/client';
+import apiClient from '../../../shared/api/client';
 import { ENDPOINTS } from '../../../shared/api/endpoints';
 import { TournamentsResponse, Tournament } from '../../../shared/types/tournament.types';
 

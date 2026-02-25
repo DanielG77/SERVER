@@ -8,8 +8,8 @@ import com.tournaments.domain.enums.TournamentStatus;
 public record TournamentFilter(
         TournamentStatus status,
         Boolean isActive,
-        LocalDateTime startDateFrom,
-        LocalDateTime startDateTo,
+        LocalDateTime startAtFrom,
+        LocalDateTime startAtTo,
         String search,
         // Nuevos filtros para videojuegos
         Long gameId,
@@ -23,13 +23,13 @@ public record TournamentFilter(
     // Constructor auxiliar que usa valores por defecto (null / listas vacías)
     public TournamentFilter(TournamentStatus status,
                             Boolean isActive,
-                            LocalDateTime startDateFrom,
-                            LocalDateTime startDateTo,
+                            LocalDateTime startAtFrom,
+                            LocalDateTime startAtTo,
                             String search) {
         this(status,
              isActive,
-             startDateFrom,
-             startDateTo,
+             startAtFrom,
+             startAtTo,
              search,
              null,           // gameId
              List.of(),      // genreIds

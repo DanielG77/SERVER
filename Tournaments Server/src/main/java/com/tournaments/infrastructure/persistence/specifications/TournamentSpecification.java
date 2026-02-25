@@ -32,12 +32,12 @@ public class TournamentSpecification {
                 predicates.add(cb.equal(root.get("isActive"), filter.isActive()));
             }
 
-            if (filter.startDateFrom() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("startAt"), filter.startDateFrom()));
+            if (filter.startAtFrom() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startAt"), filter.startAtFrom()));
             }
 
-            if (filter.startDateTo() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("startAt"), filter.startDateTo()));
+            if (filter.startAtTo() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("startAt"), filter.startAtTo()));
             }
 
             if (filter.search() != null && !filter.search().isBlank()) {

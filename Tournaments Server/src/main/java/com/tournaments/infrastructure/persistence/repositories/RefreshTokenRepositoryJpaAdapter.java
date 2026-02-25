@@ -1,5 +1,6 @@
 package com.tournaments.infrastructure.persistence.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -23,6 +24,20 @@ public class RefreshTokenRepositoryJpaAdapter implements RefreshTokenRepositoryP
     @Override
     public Optional<RefreshToken> findByToken(String token) {
         return jpaRepository.findByToken(token).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<RefreshToken> findByUserId(Long userId) {
+        return jpaRepository.findByUserId(userId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<RefreshToken> findByUserIdAndRevokedFalse(Long userId) {
+        return jpaRepository.findByUserIdAndRevokedFalse(userId).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override
