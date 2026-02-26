@@ -1,118 +1,337 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useCallback, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
-import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
-const TournamentDetails = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const { data: tournament, loading, error } = useTournament(id!);
+/**
+ * ImageCarousel Component - Renders a carousel of tournament images with navigation controls
+ */
+interface ImageCarouselProps {
+    images: string[];
+    tournamentName: string;
+}
 
-    const [current, setCurrent] = useState(0);
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, tournamentName }) => {
+    const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-    if (loading)
-        return <div className="min-h-screen bg-slate-900 text-white p-10">Loading...</div>;
+    const hasImages = useMemo(() => images && images.length > 0, [images]);
+    const canNavigate = useMemo(() => hasImages && images.length > 1, [images, hasImages]);
 
-    if (error)
-        return <div className="min-h-screen bg-slate-900 text-red-400 p-10">{error}</div>;
+    const handleNext = useCallback(() => {
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, [images.length]);
 
-    if (!tournament) return null;
-
-    const next = () =>
-        setCurrent((prev) => (prev + 1) % tournament.images.length);
-
-    const prev = () =>
-        setCurrent((prev) =>
-            prev === 0 ? tournament.images.length - 1 : prev - 1
+    const handlePrev = useCallback(() => {
+        setCurrentIndex((prev) =>
+            prev === 0 ? images.length - 1 : prev - 1
         );
+    }, [images.length]);
+
+    const handleDotClick = useCallback((index: number) => {
+        setCurrentIndex(index);
+    }, []);
+
+    if (!hasImages) {
+        return (
+            <div className="w-full h-96 bg-slate-800 rounded-xl shadow-2xl flex items-center justify-center border border-slate-700">
+                <div className="text-center">
+                    <p className="text-slate-400 text-lg">No images available</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+        <div className="relative w-full">
+            {/* Main Image */}
+            <div className="relative overflow-hidden rounded-xl shadow-2xl">
+                <img
+                    src={images[currentIndex]}
+                    alt={`${tournamentName} - Image ${currentIndex + 1}`}
+                    className="w-full h-96 object-cover transition-opacity duration-300"
+                />
 
-            <div className="container mx-auto px-6 py-12">
-
-                <button
-                    onClick={() => navigate(-1)}
-                    className="mb-10 text-blue-400 hover:text-blue-300 transition"
-                >
-                    ← Back
-                </button>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
-
-                    {/* CARRUSEL */}
-                    <div className="relative">
-
-                        <img
-                            src={tournament.images[current]}
-                            className="w-full h-[420px] object-cover rounded-xl shadow-2xl transition-all duration-500"
-                        />
-
+                {/* Navigation Buttons - Only show if multiple images */}
+                {canNavigate && (
+                    <>
                         <button
-                            onClick={prev}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 px-4 py-2 rounded-lg"
+                            onClick={handlePrev}
+                            aria-label="Previous image"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white px-3 py-2 rounded-lg transition-all duration-200 text-xl font-bold"
                         >
                             ‹
                         </button>
 
                         <button
-                            onClick={next}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 px-4 py-2 rounded-lg"
+                            onClick={handleNext}
+                            aria-label="Next image"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white px-3 py-2 rounded-lg transition-all duration-200 text-xl font-bold"
                         >
                             ›
                         </button>
+                    </>
+                )}
+            </div>
 
-                        <div className="flex justify-center mt-6 space-x-2">
-                            {tournament.images.map((_: any, index: number) => (
-                                <div
-                                    key={index}
-                                    className={`h-2 w-2 rounded-full transition ${index === current
-                                        ? 'bg-blue-400'
-                                        : 'bg-slate-600'
-                                        }`}
-                                />
-                            ))}
-                        </div>
+            {/* Indicators - Only show if multiple images */}
+            {canNavigate && (
+                <div className="flex justify-center gap-2 mt-6">
+                    {images.map((_, index) => (
+                        <button
+                            key={`indicator-${index}`}
+                            onClick={() => handleDotClick(index)}
+                            aria-label={`View image ${index + 1}`}
+                            className={`h-2.5 rounded-full transition-all duration-300 ${index === currentIndex
+                                    ? 'bg-blue-400 w-8'
+                                    : 'bg-slate-600 w-2.5 hover:bg-slate-500'
+                                }`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
+/**
+ * TournamentDetails Component - Main component for displaying tournament details
+ */
+const TournamentDetails: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const { data: tournament, loading, error } = useTournament(id || '');
+
+    const [isRegistering, setIsRegistering] = useState<boolean>(false);
+
+    /**
+     * Handle tournament registration
+     */
+    const handleRegisterNow = useCallback(async (): Promise<void> => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        setIsRegistering(true);
+        try {
+            // TODO: Implement actual tournament registration API call
+            // Example: await tournamentService.registerTournament(tournament.id);
+            console.log('Registering for tournament:', tournament?.id);
+            // For now, show a success response
+            alert('Registration successful!');
+        } catch (err) {
+            console.error('Registration failed:', err);
+            alert('Registration failed. Please try again.');
+        } finally {
+            setIsRegistering(false);
+        }
+    }, [user, tournament?.id, navigate]);
+
+    /**
+     * Render loading state
+     */
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-slate-600 border-t-blue-400 rounded-full animate-spin" />
+                    <p className="text-slate-300 text-lg">Loading tournament details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    /**
+     * Render error state
+     */
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6">
+                <div className="max-w-2xl mx-auto">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-6 text-blue-400 hover:text-blue-300 transition font-medium text-lg"
+                    >
+                        ← Back
+                    </button>
+
+                    <div className="bg-red-950 border border-red-800 rounded-lg p-6">
+                        <h2 className="text-xl font-bold text-red-200 mb-3">Error Loading Tournament</h2>
+                        <p className="text-red-100">{error}</p>
                     </div>
+                </div>
+            </div>
+        );
+    }
 
-                    {/* INFO */}
-                    <div className="space-y-6">
+    /**
+     * Render not found state
+     */
+    if (!tournament) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6">
+                <div className="max-w-2xl mx-auto">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-6 text-blue-400 hover:text-blue-300 transition font-medium text-lg"
+                    >
+                        ← Back
+                    </button>
 
-                        <h1 className="text-4xl font-bold">
-                            {tournament.name}
-                        </h1>
-
-                        <p className="text-slate-300 leading-relaxed">
-                            {tournament.description}
-                        </p>
-
-                        <div className="border-t border-slate-700 pt-6 space-y-2 text-slate-200">
-                            <p><strong>Game:</strong> {tournament.game.name}</p>
-                            <p><strong>Format:</strong> {tournament.format.name}</p>
-                            <p><strong>Platforms:</strong> {tournament.platforms.map((p: any) => p.name).join(', ')}</p>
-                            <p><strong>Players:</strong> {tournament.minPlayers} - {tournament.maxPlayers}</p>
-                            <p><strong>Start:</strong> {new Date(tournament.startAt).toLocaleDateString()}</p>
-                            <p><strong>End:</strong> {new Date(tournament.endDate).toLocaleDateString()}</p>
-                        </div>
-
-                        <button className="mt-6 bg-blue-600 hover:bg-blue-500 transition px-8 py-3 rounded-xl font-semibold shadow-lg">
-                            Register Now
-                        </button>
+                    <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 text-center">
+                        <h2 className="text-2xl font-bold text-slate-200 mb-3">Tournament Not Found</h2>
+                        <p className="text-slate-400 mb-6">The tournament you're looking for doesn't exist or has been removed.</p>
                         <button
                             onClick={() => navigate('/shop')}
-                            className="inline-flex items-center gap-2 mb-8 px-4 py-2 
-                            bg-slate-800 hover:bg-slate-700 
-                            border border-slate-600 
-                            rounded-lg transition 
-                            text-sm font-medium"
+                            className="inline-block bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
                         >
-                            ← Back to Shop
+                            Back to Shop
                         </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
+    /**
+     * Format date safely
+     */
+    const formatDate = (dateString: string): string => {
+        try {
+            return new Date(dateString).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+        } catch {
+            return 'Invalid date';
+        }
+    };
+
+    /**
+     * Get platform names safely
+     */
+    const getPlatformNames = (): string => {
+        if (!tournament.platforms || tournament.platforms.length === 0) {
+            return 'Not specified';
+        }
+        return tournament.platforms.map((p) => p.name).join(', ');
+    };
+
+    /**
+     * Render main content
+     */
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+            <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate(-1)}
+                    className="mb-8 text-blue-400 hover:text-blue-300 transition font-medium text-lg"
+                >
+                    ← Back
+                </button>
+
+                {/* Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+                    {/* Left Column - Image Carousel */}
+                    <div className="flex flex-col">
+                        <ImageCarousel
+                            images={tournament.images ?? []}
+                            tournamentName={tournament.name}
+                        />
                     </div>
 
-                </div>
+                    {/* Right Column - Tournament Information */}
+                    <div className="space-y-8">
+                        {/* Title */}
+                        <div>
+                            <h1 className="text-4xl sm:text-5xl font-bold mb-4">{tournament.name}</h1>
+                            <p className="text-slate-300 text-lg leading-relaxed">{tournament.description ?? 'No description available'}</p>
+                        </div>
 
+                        {/* Tournament Info Table */}
+                        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-6 space-y-4">
+                            <h3 className="text-xl font-semibold text-blue-300 mb-4">Tournament Details</h3>
+
+                            <div className="space-y-3 divide-y divide-slate-700">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-slate-400 font-medium">Game:</span>
+                                    <span className="text-slate-200">{tournament.game?.name ?? 'Not specified'}</span>
+                                </div>
+
+                                <div className="flex justify-between items-start pt-3">
+                                    <span className="text-slate-400 font-medium">Format:</span>
+                                    <span className="text-slate-200">{tournament.format?.name ?? 'Not specified'}</span>
+                                </div>
+
+                                <div className="flex justify-between items-start pt-3">
+                                    <span className="text-slate-400 font-medium">Platforms:</span>
+                                    <span className="text-slate-200">{getPlatformNames()}</span>
+                                </div>
+
+                                <div className="flex justify-between items-start pt-3">
+                                    <span className="text-slate-400 font-medium">Players:</span>
+                                    <span className="text-slate-200">
+                                        {tournament.minPlayers} - {tournament.maxPlayers}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between items-start pt-3">
+                                    <span className="text-slate-400 font-medium">Start Date:</span>
+                                    <span className="text-slate-200">{formatDate(tournament.startAt)}</span>
+                                </div>
+
+                                <div className="flex justify-between items-start pt-3">
+                                    <span className="text-slate-400 font-medium">End Date:</span>
+                                    <span className="text-slate-200">{formatDate(tournament.endAt)}</span>
+                                </div>
+
+                                {tournament.status && (
+                                    <div className="flex justify-between items-start pt-3">
+                                        <span className="text-slate-400 font-medium">Status:</span>
+                                        <span
+                                            className={`px-3 py-1 rounded-full text-sm font-semibold ${tournament.status === 'open'
+                                                    ? 'bg-green-900/50 text-green-300'
+                                                    : tournament.status === 'draft'
+                                                        ? 'bg-yellow-900/50 text-yellow-300'
+                                                        : 'bg-slate-700 text-slate-300'
+                                                }`}
+                                        >
+                                            {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <button
+                                onClick={handleRegisterNow}
+                                disabled={isRegistering}
+                                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-600 disabled:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none disabled:cursor-not-allowed"
+                            >
+                                {isRegistering ? 'Registering...' : 'Register Now'}
+                            </button>
+
+                            <button
+                                onClick={() => navigate('/shop')}
+                                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg border border-slate-600 transition-all duration-200"
+                            >
+                                ← Back to Shop
+                            </button>
+                        </div>
+
+                        {/* User Info */}
+                        {!user && (
+                            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-blue-200 text-sm">
+                                <p>Sign in to register for this tournament</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

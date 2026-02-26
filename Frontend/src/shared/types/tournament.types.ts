@@ -20,6 +20,11 @@ export interface Format {
     maxPlayers: number;
 }
 
+export interface Platform {
+    id: number | string;
+    name: string;
+}
+
 export interface Tournament {
     id: string;
     name: string;
@@ -37,7 +42,7 @@ export interface Tournament {
     format: Format;
     minPlayers: number;
     maxPlayers: number;
-    platforms: any[]; // ajustar según necesidad
+    platforms: Platform[];
     online: boolean;
 }
 

@@ -1,29 +1,82 @@
-// import React from 'react';
-// import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-// import Home from './pages/Home';
-// import TournamentListPage from './pages/TournamentListPage';
-// // import TournamentDetailPage from './pages/TournamentDetailPage';
-// // import TournamentFormPage from './pages/TournamentFormPage';
-// import Layout from './components/layout/Layout';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { PrivateRoute } from './components/PrivateRoute';
+import { RoleGuard } from './components/RoleGuard';
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationToast from './components/NotificationToast';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/Layout';
 
-// function App() {
-//     return (
-//         <Router>
-//             <Layout>
-//                 <Routes>
-//                     <Route path="/" element={<Home />} />
-//                     <Route path="/home" element={<Navigate to="/" replace />} />
-//                     {/* <Route path="/tournaments" element={<TournamentListPage />} /> */}
-//                     {/* <Route path="/tournaments/create" element={<TournamentFormPage />} /> */}
-//                     {/* <Route path="/tournaments/:slug" element={<TournamentDetailPage />} /> */}
-//                     {/* <Route path="/tournaments/:id/edit" element={<TournamentFormPage />} /> */}
-//                     {/* <Route path="/about" element={<div className="min-h-screen flex items-center justify-center">About Page (Coming Soon)</div>} />
-//                     <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center">Contact Page (Coming Soon)</div>} />
-//                     <Route path="*" element={<div className="min-h-screen flex items-center justify-center">404 - Page Not Found</div>} /> */}
-//                 </Routes>
-//             </Layout>
-//         </Router>
-//     );
-// }
+// Pages
+import HomePage from './pages/HomePage';
+import Login from './pages/Login';
+import ProfilePage from './pages/ProfilePage';
+import ShopPage from './pages/ShopPage';
+import TournamentDetails from './pages/TournamentDetails';
+import UnauthorizedPage from './pages/UnauthorizedPage';
+import AdminDashboard from './pages/AdminDashboard';
 
-// export default App;
+function App() {
+    return (
+        <Router>
+            <AuthProvider>
+                <NotificationProvider>
+                    <Layout>
+                        <NotificationToast />
+                        <Routes>
+                            {/* Public routes */}
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+                            {/* Protected routes - User */}
+                            <Route
+                                path="/profile"
+                                element={
+                                    <PrivateRoute>
+                                        <ProfilePage />
+                                    </PrivateRoute>
+                                }
+                            />
+
+                            {/* Protected routes - Other user pages */}
+                            <Route
+                                path="/shop"
+                                element={
+                                    <PrivateRoute>
+                                        <ShopPage />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/tournaments/:id"
+                                element={
+                                    <PrivateRoute>
+                                        <TournamentDetails />
+                                    </PrivateRoute>
+                                }
+                            />
+
+                            {/* Protected routes - Admin */}
+                            <Route
+                                path="/admin"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleGuard>
+                                            <AdminDashboard />
+                                        </RoleGuard>
+                                    </PrivateRoute>
+                                }
+                            />
+
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                    </Layout>
+                </NotificationProvider>
+            </AuthProvider>
+        </Router>
+    );
+}
+
+export default App;

@@ -1,6 +1,7 @@
 package com.tournaments.infrastructure.persistence.entities;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.Column;
@@ -12,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -44,6 +46,12 @@ public class UserEntity {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<RoleEntity> roles;
+
+    @Column(nullable = false)
+    private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    private List<TournamentEntity> tournaments;
 
     public UserEntity() {}
 
@@ -120,5 +128,21 @@ public class UserEntity {
 
     public void setRoles(Set<RoleEntity> roles) {
         this.roles = roles;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public List<TournamentEntity> getTournaments() {
+        return tournaments;
+    }
+
+    public void setTournaments(List<TournamentEntity> tournaments) {
+        this.tournaments = tournaments;
     }
 }

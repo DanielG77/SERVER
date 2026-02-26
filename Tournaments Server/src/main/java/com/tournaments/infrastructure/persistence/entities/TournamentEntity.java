@@ -72,6 +72,10 @@ public class TournamentEntity {
     // === NUEVOS CAMPOS Y RELACIONES ===
     
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity owner;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
     private GameEntity game;
     
@@ -197,6 +201,16 @@ public class TournamentEntity {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    // === GETTERS Y SETTERS PARA OWNER ===
+    
+    public UserEntity getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UserEntity owner) {
+        this.owner = owner;
     }
 
     // === GETTERS Y SETTERS NUEVOS ===

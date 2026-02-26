@@ -4,10 +4,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.tournaments.application.service.AdminGameService;
+import com.tournaments.application.service.AdminTournamentService;
+import com.tournaments.application.service.AdminUserService;
 import com.tournaments.application.service.FollowServiceImpl;
 import com.tournaments.application.service.ProfileServiceImpl;
 import com.tournaments.application.service.UserServiceImpl;
+import com.tournaments.application.service.UserTournamentService;
+import com.tournaments.application.service.impl.AdminGameServiceImpl;
+import com.tournaments.application.service.impl.AdminTournamentServiceImpl;
+import com.tournaments.application.service.impl.AdminUserServiceImpl;
 import com.tournaments.application.service.impl.AuthServiceImpl;
+import com.tournaments.application.service.impl.UserTournamentServiceImpl;
 import com.tournaments.application.usecase.FollowProfileUseCase;
 import com.tournaments.application.usecase.GetProfileUseCase;
 import com.tournaments.application.usecase.GetUserUseCase;
@@ -26,6 +34,12 @@ import com.tournaments.domain.service.AuthService;
 import com.tournaments.domain.service.FollowService;
 import com.tournaments.domain.service.ProfileService;
 import com.tournaments.domain.service.UserService;
+import com.tournaments.infrastructure.persistence.repositories.JpaRoleRepository;
+import com.tournaments.infrastructure.persistence.repositories.JpaUserRepository;
+import com.tournaments.infrastructure.persistence.repositories.jpa.JpaGameRepository;
+import com.tournaments.infrastructure.persistence.repositories.jpa.JpaPlatformRepository;
+import com.tournaments.infrastructure.persistence.repositories.jpa.JpaTournamentFormatRepository;
+import com.tournaments.infrastructure.persistence.repositories.jpa.JpaTournamentRepository;
 
 @Configuration
 public class ApplicationConfig {
@@ -90,5 +104,39 @@ public class ApplicationConfig {
     @Bean
     public UnfollowProfileUseCase unfollowProfileUseCase(FollowService followService, UserService userService) {
         return new UnfollowProfileUseCase(followService, userService);
+    }
+
+    // === NUEVOS BEANS PARA ADMIN/USER TOURNAMENTS ===
+
+    @Bean
+    public AdminTournamentService adminTournamentService(
+            JpaTournamentRepository tournamentRepository,
+            JpaUserRepository userRepository,
+            JpaGameRepository gameRepository,
+            JpaTournamentFormatRepository formatRepository,
+            JpaPlatformRepository platformRepository) {
+        return new AdminTournamentServiceImpl(tournamentRepository, userRepository, gameRepository, formatRepository, platformRepository);
+    }
+
+    @Bean
+    public UserTournamentService userTournamentService(
+            JpaTournamentRepository tournamentRepository,
+            JpaUserRepository userRepository,
+            JpaGameRepository gameRepository,
+            JpaTournamentFormatRepository formatRepository,
+            JpaPlatformRepository platformRepository) {
+        return new UserTournamentServiceImpl(tournamentRepository, userRepository, gameRepository, formatRepository, platformRepository);
+    }
+
+    @Bean
+    public AdminGameService adminGameService(JpaGameRepository gameRepository) {
+        return new AdminGameServiceImpl(gameRepository);
+    }
+
+    @Bean
+    public AdminUserService adminUserService(
+            JpaUserRepository userRepository,
+            JpaRoleRepository roleRepository) {
+        return new AdminUserServiceImpl(userRepository, roleRepository);
     }
 }

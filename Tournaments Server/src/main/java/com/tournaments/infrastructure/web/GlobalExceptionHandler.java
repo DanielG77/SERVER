@@ -1,6 +1,8 @@
 package com.tournaments.infrastructure.web;
 
-import com.tournaments.presentation.response.ApiResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -9,9 +11,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.tournaments.presentation.response.ApiResponse;
+
 import jakarta.validation.ConstraintViolationException;
-import java.util.HashMap;
-import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -64,6 +66,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleTournamentNotFoundException(
             com.tournaments.shared.exceptions.TournamentNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(com.tournaments.domain.exception.ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(
+            com.tournaments.domain.exception.ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(com.tournaments.domain.exception.UnauthorizedOperationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorizedOperationException(
+            com.tournaments.domain.exception.UnauthorizedOperationException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 

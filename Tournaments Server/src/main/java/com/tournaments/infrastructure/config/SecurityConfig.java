@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,7 @@ import com.tournaments.infrastructure.security.JwtAuthFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -44,9 +46,15 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                 "/v3/api-docs/**"          // OpenAPI docs
             ).permitAll()
             // Rutas de usuarios requieren autenticación (cualquier usuario autenticado)
-                .requestMatchers(
-                     "/api/users/**",
-                    "/api/profiles/**"
+            .requestMatchers(
+                "/api/users/**",
+                "/api/profiles/**"
+            ).authenticated()
+            // Rutas de admin requieren autenticación
+            // La validación de rol se hace con @PreAuthorize("hasRole('ADMIN')")
+            .requestMatchers(
+                "/api/admin/**",          // admin tournaments, games, users
+                "/api/user/**"             // user tournaments
             ).authenticated()
             // El resto de rutas son públicas
             .anyRequest().permitAll()

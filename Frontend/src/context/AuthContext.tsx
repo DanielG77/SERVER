@@ -4,11 +4,21 @@ import Cookies from 'js-cookie';
 import { apiLogin, LoginCredentials } from '../services/auth';
 
 interface User {
-    id: string;
+    id: string;         // ID numérico como string (para compatibilidad con JWT sub)
+    numericId: number;  // ID numérico utilizado por el backend
     username: string;
     email: string;
+    roles: string[];
     avatarUrl?: string;
     bio?: string;
+}
+
+interface DecodedToken {
+    sub?: string;
+    username?: string;
+    email?: string;
+    roles?: string[];
+    [key: string]: unknown;
 }
 
 interface PendingRequest {
@@ -27,9 +37,24 @@ interface AuthContextType {
     logout: () => Promise<void>;
     refreshAccessToken: () => Promise<void>;
     authFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    hasRole: (role: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper: Decodificar JWT para extraer claims
+const decodeToken = (token: string): DecodedToken | null => {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+
+        const decoded = JSON.parse(atob(parts[1]));
+        return decoded;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+    }
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -236,10 +261,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (response.ok) {
                 const data = await response.json();
                 console.log('[AuthContext] Profile fetched successfully:', data.username);
+
+                // Si la respuesta no tiene roles, intentar decodificar el token
+                let roles = data.roles || [];
+                if (!roles || roles.length === 0) {
+                    const token = Cookies.get('access_token');
+                    if (token) {
+                        const decoded = decodeToken(token);
+                        roles = decoded?.roles || [];
+                    }
+                }
+
                 setUser({
                     id: String(data.id),
+                    numericId: Number(data.id),
                     username: data.username,
                     email: data.email,
+                    roles: Array.isArray(roles) ? roles : [],
                     avatarUrl: data.avatarUrl,
                     bio: data.bio,
                 });
@@ -322,13 +360,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 sameSite: 'Lax'
             });
 
-            // 3. Obtener perfil del usuario autenticado
-            console.log('[AuthContext] Login successful, setting user:', tokens.username);
-            setUser({
-                id: tokens.username, // Usar email o username como ID temporal
-                username: tokens.username,
-                email: tokens.email,
-            });
+            // 3. Obtener perfil del usuario autenticado para conseguir el ID numérico
+            // (fetchProfile obtendrá roles, email, numericId, etc.)
+            console.log('[AuthContext] Login successful, fetching full profile...');
+            await fetchProfile();
             setLoading(false);
         } catch (error) {
             console.error('[AuthContext] Login error:', error);
@@ -339,7 +374,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
             throw error; // para que el componente Login pueda mostrar el error
         }
-    }, [clearErrorMessage]);
+    }, [clearErrorMessage, fetchProfile]);
 
     const logout = useCallback(async () => {
         try {
@@ -380,6 +415,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const isAuthenticated = user !== null && Cookies.get('access_token') !== undefined;
+
+    // Helper: Verificar si el usuario tiene un rol específico
+    const hasRole = (role: string): boolean => {
+        if (!user || !user.roles) return false;
+        return user.roles.some(r => r === role || r === `ROLE_${role}`);
+    };
+
     const value: AuthContextType = {
         user,
         isAuthenticated,
@@ -389,7 +431,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         refreshAccessToken,
-        authFetch
+        authFetch,
+        hasRole
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

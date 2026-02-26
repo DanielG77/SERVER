@@ -9,7 +9,7 @@ const Header: React.FC = () => {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, hasRole } = useAuth();
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
     const isHome = location.pathname === '/' || location.pathname === '/home';
@@ -60,7 +60,7 @@ const Header: React.FC = () => {
                         {user ? (
                             <div className="flex items-center gap-4 pl-4 border-l border-gray-300">
                                 <Link
-                                    to="/perfil"
+                                    to="/profile"
                                     className={`flex items-center gap-2 px-3 py-1 rounded-full hover:bg-gray-200 transition ${isHome ? 'text-white hover:bg-white/20' : 'text-gray-800'
                                         }`}
                                 >
@@ -72,6 +72,18 @@ const Header: React.FC = () => {
                                     />
                                     <span className="font-medium truncate max-w-[120px]">{user.username}</span>
                                 </Link>
+
+                                {/* Admin Dashboard - Solo visible si es ADMIN */}
+                                {hasRole('ADMIN') && (
+                                    <NavLink
+                                        to="/admin"
+                                        className={navLinkClasses}
+                                        title="Panel de administración"
+                                    >
+                                        🔧 Admin
+                                    </NavLink>
+                                )}
+
                                 <button
                                     onClick={() => setShowLogoutConfirm(true)}
                                     className={`px-3 py-1 rounded transition ${isHome
@@ -164,7 +176,7 @@ const Header: React.FC = () => {
                         {user ? (
                             <div className="space-y-2">
                                 <Link
-                                    to="/perfil"
+                                    to="/profile"
                                     className={`flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-200 transition ${isHome ? 'text-white hover:bg-white/20' : 'text-gray-800'
                                         }`}
                                     onClick={toggleMobileMenu}
@@ -177,6 +189,21 @@ const Header: React.FC = () => {
                                     />
                                     <span className="font-medium truncate max-w-[120px]">{user.username}</span>
                                 </Link>
+
+                                {/* Admin Dashboard - Solo visible si es ADMIN */}
+                                {hasRole('ADMIN') && (
+                                    <NavLink
+                                        to="/admin"
+                                        className={({ isActive }) =>
+                                            `block px-3 py-2 rounded ${isHome ? 'hover:bg-white/10' : 'hover:bg-gray-100'} ${isActive ? (isHome ? 'bg-white/20' : 'bg-gray-200') : ''
+                                            }`
+                                        }
+                                        onClick={toggleMobileMenu}
+                                    >
+                                        🔧 Admin Dashboard
+                                    </NavLink>
+                                )}
+
                                 <button
                                     onClick={() => setShowLogoutConfirm(true)}
                                     className={`w-full text-left px-3 py-2 rounded transition flex items-center gap-2 ${isHome

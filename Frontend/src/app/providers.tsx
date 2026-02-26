@@ -6,6 +6,7 @@ import { TournamentsProvider } from '../context/TournamentsContext';
 import { GamesProvider } from '../context/GamesContext';
 import { CategoriesProvider } from '../context/CategoriesContext';
 import { AuthProvider } from '../context/AuthContext';
+import { NotificationProvider } from '../context/NotificationContext';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -24,13 +25,15 @@ export const Providers = ({ children }: ProvidersProps) => {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <TournamentsProvider>
-                    <GamesProvider>
-                        <CategoriesProvider>
-                            {children}
-                        </CategoriesProvider>
-                    </GamesProvider>
-                </TournamentsProvider>
+                <NotificationProvider>
+                    <TournamentsProvider>
+                        <GamesProvider>
+                            <CategoriesProvider>
+                                {children}
+                            </CategoriesProvider>
+                        </GamesProvider>
+                    </TournamentsProvider>
+                </NotificationProvider>
             </AuthProvider>
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
