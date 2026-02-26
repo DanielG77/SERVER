@@ -17,6 +17,7 @@ export const ShopPage = () => {
         genreIds: [] as string[],
         formatIds: [] as string[],
         platformIds: [] as string[],
+        is_active: true,     // 👈 AQUI FILTRAMOS SOLO ACTIVOS
     });
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
