@@ -6,7 +6,7 @@ import { RecentTournamentsSection } from '../features/tournaments/components/Rec
 
 export const HomePage = () => {
     return (
-        <div className="min-h-screen bg-white text-slate-800">
+        <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
             <HeroCarousel />
 
             <RecentTournamentsSection />

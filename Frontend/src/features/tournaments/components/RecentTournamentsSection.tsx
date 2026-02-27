@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTournamentsContext } from '../../../context/TournamentsContext';
 import { API_BASE_URL } from '../../../shared/api/endpoints';
 
@@ -11,17 +12,15 @@ const formatDate = (isoString: string): string => {
     }).replace(/\./g, '');
 };
 
-
-
-
 export const RecentTournamentsSection = () => {
     const { tournaments, isLoading, error } = useTournamentsContext();
     const carouselRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     const scroll = (direction: 'left' | 'right') => {
         if (!carouselRef.current) return;
         const container = carouselRef.current;
-        const firstCard = container.querySelector('.snap-start');
+        const firstCard = container.querySelector('.snap-start') as HTMLElement | null;
         if (!firstCard) return;
         const cardWidth = firstCard.clientWidth;
         const gap = 20;
@@ -49,6 +48,11 @@ export const RecentTournamentsSection = () => {
         );
     }
 
+    // limit 5
+    const visibleTournaments = (tournaments ?? [])
+        .filter(tournament => tournament.active === true)
+        .slice(0, 5);
+
     return (
         <section className="w-full bg-blue-950 py-16">
             {/* Contenedor para el contenido centrado */}
@@ -56,15 +60,15 @@ export const RecentTournamentsSection = () => {
                 {/* Cabecera */}
                 <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
                     <div>
-                        <h2 className="text-3xl font-bold text-white">Torneos recientes</h2>
-                        <p className="text-blue-100 mt-1">Los eventos más populares de la semana</p>
+                        <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">Torneos recientes</h2>
+                        <p className="text-blue-100 mt-2 text-lg">Los eventos más populares de la semana</p>
                     </div>
-                    <a
-                        href="/shop"
-                        className="inline-block bg-green-400 hover:bg-green-500 text-gray-900 font-medium px-6 py-3 rounded-full transition shadow"
+                    <button
+                        onClick={() => navigate('/shop')}
+                        className="inline-block bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold px-8 py-3 rounded-full transition-all shadow-lg hover:shadow-green-500/50 transform hover:-translate-y-1"
                     >
                         Explorar todos
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -74,39 +78,60 @@ export const RecentTournamentsSection = () => {
                     ref={carouselRef}
                     className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-5 pb-4 scroll-smooth"
                 >
-                    {tournaments?.map((tournament) => {
+                    {visibleTournaments.map((tournament) => {
                         const bannerImage = tournament.images?.[0]
                             ? `${API_BASE_URL}${tournament.images[0]}`
                             : 'https://www.antevenio.com/wp-content/uploads/2021/03/events-esports.png';
 
-                        const startAt = formatDate(tournament.startAt);
+                        const startAt = tournament.startAt ? formatDate(tournament.startAt) : 'Sin fecha';
                         const prize = tournament.priceClient ? `${tournament.priceClient.toFixed(2)} €` : '—';
+
+                        const goToShop = () => navigate(`/shop/${tournament.id}`);
 
                         return (
                             <div
                                 key={tournament.id}
-                                className="snap-start shrink-0 w-72 bg-white rounded-2xl shadow-md hover:shadow-xl transition"
+                                onClick={goToShop}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        goToShop();
+                                    }
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                className="snap-start shrink-0 w-80 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl hover:shadow-2xl hover:bg-white/20 transition-all cursor-pointer group flex flex-col"
+                                aria-label={`Ver tienda del torneo ${tournament.name}`}
                             >
-                                <img
-                                    src={bannerImage}
-                                    alt={tournament.name}
-                                    className="w-full h-40 object-cover rounded-t-2xl"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = 'https://www.antevenio.com/wp-content/uploads/2021/03/events-esports.png';
-                                    }}
-                                />
-                                <div className="p-4">
-                                    <h3 className="font-bold text-lg">{tournament.name}</h3>
-                                    <p className="text-sm text-gray-600">
-                                        {tournament.game.name} · {tournament.format?.name || 'Formato libre'}
+                                <div className="relative overflow-hidden rounded-t-2xl">
+                                    <img
+                                        src={bannerImage}
+                                        alt={tournament.name}
+                                        className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                                        onError={(e) => {
+                                            (e.currentTarget as HTMLImageElement).src = 'https://www.antevenio.com/wp-content/uploads/2021/03/events-esports.png';
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
+                                </div>
+                                <div className="p-5 flex flex-col flex-grow">
+                                    <h3 className="font-bold text-xl text-white group-hover:text-green-400 transition-colors line-clamp-1">{tournament.name}</h3>
+                                    <p className="text-sm text-blue-200 mt-1">
+                                        {tournament.game?.name || 'Juego'} <span className="text-white/50">•</span> {tournament.format?.name || 'Formato libre'}
                                     </p>
-                                    <p className="text-sm text-gray-600 mt-1">📅 {startAt}</p>
-                                    <p className="text-green-400 font-semibold mt-1">💰 {prize}</p>
+                                    <div className="flex justify-between items-center mt-auto pt-4">
+                                        <p className="text-sm font-medium text-white/80 bg-white/10 px-3 py-1 rounded-full">📅 {startAt}</p>
+                                        <p className="text-green-400 font-bold text-lg drop-shadow-md">💰 {prize}</p>
+                                    </div>
                                     <button
-                                        className="mt-3 w-full bg-green-400 hover:bg-green-500 text-gray-900 font-medium py-2 rounded-lg transition"
-                                        aria-label={`Unirse a ${tournament.name}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // prevenir doble navegación por el onClick del card
+                                            goToShop();
+                                        }}
+                                        className="mt-4 w-full bg-white/10 hover:bg-green-500 group-hover:bg-green-500 text-white hover:text-gray-900 font-bold py-2.5 rounded-xl transition-all shadow-md group-hover:shadow-green-500/50"
+                                        aria-label={`Ir a la tienda del torneo ${tournament.name}`}
                                     >
-                                        Unirse
+                                        Ver detalles
                                     </button>
                                 </div>
                             </div>

@@ -65,13 +65,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String generateRefreshToken(User user) {
-        String token = jwtProvider.generateToken(user.getUsername(), new String[]{});
+
+        String token = java.util.UUID.randomUUID().toString();
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(token);
         refreshToken.setUserId(user.getId());
-        refreshToken.setExpiryDate(OffsetDateTime.now().plusDays(7)); // 7 días
+        refreshToken.setExpiryDate(OffsetDateTime.now().plusDays(7));
         refreshToken.setCreatedAt(OffsetDateTime.now());
+
         refreshTokenRepository.save(refreshToken);
+
         return token;
     }
 

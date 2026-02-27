@@ -82,8 +82,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, tournamentName })
                             onClick={() => handleDotClick(index)}
                             aria-label={`View image ${index + 1}`}
                             className={`h-2.5 rounded-full transition-all duration-300 ${index === currentIndex
-                                    ? 'bg-blue-400 w-8'
-                                    : 'bg-slate-600 w-2.5 hover:bg-slate-500'
+                                ? 'bg-blue-400 w-8'
+                                : 'bg-slate-600 w-2.5 hover:bg-slate-500'
                                 }`}
                         />
                     ))}
@@ -222,9 +222,11 @@ const TournamentDetails: React.FC = () => {
     /**
      * Render main content
      */
+    console.log('Tournament data:', tournament); // Debug log for tournament data
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
             <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+
                 {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
@@ -233,8 +235,16 @@ const TournamentDetails: React.FC = () => {
                     ← Back
                 </button>
 
+                {/* Tournament Title */}
+                <div className="mb-10">
+                    <h1 className="text-4xl sm:text-5xl font-bold">
+                        {tournament.name}
+                    </h1>
+                </div>
+
                 {/* Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+
                     {/* Left Column - Image Carousel */}
                     <div className="flex flex-col">
                         <ImageCarousel
@@ -245,30 +255,20 @@ const TournamentDetails: React.FC = () => {
 
                     {/* Right Column - Tournament Information */}
                     <div className="space-y-8">
-                        {/* Title */}
-                        <div>
-                            <h1 className="text-4xl sm:text-5xl font-bold mb-4">{tournament.name}</h1>
-                            <p className="text-slate-300 text-lg leading-relaxed">{tournament.description ?? 'No description available'}</p>
-                        </div>
 
-                        {/* Tournament Info Table */}
+                        {/* Tournament Info Card */}
                         <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-6 space-y-4">
-                            <h3 className="text-xl font-semibold text-blue-300 mb-4">Tournament Details</h3>
+                            <h3 className="text-xl font-semibold text-blue-300 mb-4">
+                                Tournament Details
+                            </h3>
 
                             <div className="space-y-3 divide-y divide-slate-700">
+
                                 <div className="flex justify-between items-start">
                                     <span className="text-slate-400 font-medium">Game:</span>
-                                    <span className="text-slate-200">{tournament.game?.name ?? 'Not specified'}</span>
-                                </div>
-
-                                <div className="flex justify-between items-start pt-3">
-                                    <span className="text-slate-400 font-medium">Format:</span>
-                                    <span className="text-slate-200">{tournament.format?.name ?? 'Not specified'}</span>
-                                </div>
-
-                                <div className="flex justify-between items-start pt-3">
-                                    <span className="text-slate-400 font-medium">Platforms:</span>
-                                    <span className="text-slate-200">{getPlatformNames()}</span>
+                                    <span className="text-slate-200">
+                                        {tournament.game?.name ?? 'Not specified'}
+                                    </span>
                                 </div>
 
                                 <div className="flex justify-between items-start pt-3">
@@ -280,12 +280,16 @@ const TournamentDetails: React.FC = () => {
 
                                 <div className="flex justify-between items-start pt-3">
                                     <span className="text-slate-400 font-medium">Start Date:</span>
-                                    <span className="text-slate-200">{formatDate(tournament.startAt)}</span>
+                                    <span className="text-slate-200">
+                                        {formatDate(tournament.startAt)}
+                                    </span>
                                 </div>
 
                                 <div className="flex justify-between items-start pt-3">
                                     <span className="text-slate-400 font-medium">End Date:</span>
-                                    <span className="text-slate-200">{formatDate(tournament.endAt)}</span>
+                                    <span className="text-slate-200">
+                                        {formatDate(tournament.endAt)}
+                                    </span>
                                 </div>
 
                                 {tournament.status && (
@@ -293,13 +297,14 @@ const TournamentDetails: React.FC = () => {
                                         <span className="text-slate-400 font-medium">Status:</span>
                                         <span
                                             className={`px-3 py-1 rounded-full text-sm font-semibold ${tournament.status === 'open'
-                                                    ? 'bg-green-900/50 text-green-300'
-                                                    : tournament.status === 'draft'
-                                                        ? 'bg-yellow-900/50 text-yellow-300'
-                                                        : 'bg-slate-700 text-slate-300'
+                                                ? 'bg-green-900/50 text-green-300'
+                                                : tournament.status === 'draft'
+                                                    ? 'bg-yellow-900/50 text-yellow-300'
+                                                    : 'bg-slate-700 text-slate-300'
                                                 }`}
                                         >
-                                            {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                                            {tournament.status.charAt(0).toUpperCase() +
+                                                tournament.status.slice(1)}
                                         </span>
                                     </div>
                                 )}
@@ -324,7 +329,6 @@ const TournamentDetails: React.FC = () => {
                             </button>
                         </div>
 
-                        {/* User Info */}
                         {!user && (
                             <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-blue-200 text-sm">
                                 <p>Sign in to register for this tournament</p>
@@ -332,6 +336,30 @@ const TournamentDetails: React.FC = () => {
                         )}
                     </div>
                 </div>
+
+                {/* ========================= */}
+                {/* Dedicated Description Section */}
+                {/* ========================= */}
+
+                <div className="mt-20 max-w-5xl mx-auto">
+                    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8">
+
+                        <h2 className="text-3xl font-bold mb-6 text-blue-300">
+                            About This Tournament
+                        </h2>
+
+                        {tournament.description ? (
+                            <div className="text-slate-300 leading-relaxed whitespace-pre-line text-lg">
+                                {tournament.description}
+                            </div>
+                        ) : (
+                            <p className="text-slate-500 italic">
+                                No detailed description available for this tournament.
+                            </p>
+                        )}
+                    </div>
+                </div>
+
             </div>
         </div>
     );

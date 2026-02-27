@@ -39,7 +39,7 @@ export interface Tournament {
     endAt: string;
     slug: string;
     game: Game;
-    format: Format;
+    format: Format | null;
     minPlayers: number;
     maxPlayers: number;
     platforms: Platform[];

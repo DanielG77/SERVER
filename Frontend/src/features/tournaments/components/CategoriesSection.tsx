@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCategories } from '../../../context/CategoriesContext';
 
 // Mapa de imágenes placeholder por categoría (podría ser una función que asigne según el nombre)
@@ -18,6 +19,7 @@ const getCategoryImage = (categoryName: string): string => {
 export const CategoriesSection = () => {
     const { categories, isLoading, error } = useCategories();
     const carouselRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     const scroll = (direction: 'left' | 'right') => {
         if (!carouselRef.current) return;
@@ -35,9 +37,9 @@ export const CategoriesSection = () => {
 
     if (isLoading) {
         return (
-            <section className="bg-gray-50 py-16">
+            <section className="bg-slate-900 py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center">Cargando categorías...</div>
+                    <div className="text-center text-white">Cargando categorías...</div>
                 </div>
             </section>
         );
@@ -45,19 +47,20 @@ export const CategoriesSection = () => {
 
     if (error || !categories?.length) {
         return (
-            <section className="bg-gray-50 py-16">
+            <section className="bg-slate-900 py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center">No hay categorías disponibles</div>
+                    <div className="text-center text-white">No hay categorías disponibles</div>
                 </div>
             </section>
         );
     }
 
     return (
-        <section className="bg-gray-50 py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">Categorías</h2>
-                <p className="text-gray-500 mb-8">Explora por tipo de juego o plataforma</p>
+        <section className="bg-slate-900 py-20 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-900/20 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 mb-2">Categorías destacadas</h2>
+                <p className="text-gray-400 text-lg mb-10">Explora por tipo de juego o plataforma</p>
 
                 <div className="relative group">
                     <div
@@ -69,12 +72,15 @@ export const CategoriesSection = () => {
                             return (
                                 <div
                                     key={category.id}
-                                    className="snap-start shrink-0 w-56 h-72 rounded-2xl shadow-md bg-cover bg-center relative"
+                                    onClick={() => navigate('/shop', { state: { categoryId: category.id } })}
+                                    className="snap-start shrink-0 w-64 h-80 rounded-3xl shadow-lg hover:shadow-2xl hover:-translate-y-2 cursor-pointer transition-all duration-300 bg-cover bg-center relative group overflow-hidden"
                                     style={{ backgroundImage: `url('${imageUrl}')` }}
                                 >
-                                    <div className="absolute inset-0 bg-black/30 rounded-2xl" />
-                                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/60 text-white text-center rounded-b-2xl">
-                                        <h3 className="font-semibold text-lg">{category.name}</h3>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-400/50 rounded-3xl transition-colors" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-5 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                        <h3 className="font-bold text-2xl text-white mb-1 drop-shadow-lg">{category.name}</h3>
+                                        <div className="w-8 h-1 bg-blue-500 rounded-full group-hover:w-16 transition-all duration-300"></div>
                                     </div>
                                 </div>
                             );

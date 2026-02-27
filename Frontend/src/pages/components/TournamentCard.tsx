@@ -17,6 +17,7 @@ interface TournamentCardProps {
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, onClick }) => {
+    console.log('Rendering TournamentCard for:', tournament);
     return (
         <div
             className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
@@ -35,7 +36,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, onClick }) 
                 </div>
                 <div className="text-sm text-gray-500 mb-2">
                     <p>Start: {new Date(tournament.startAt).toLocaleDateString()}</p>
-                    <p>End: {new Date(tournament.endDate).toLocaleDateString()}</p>
+                    {/* <p>End: {new Date(tournament.endDate).toLocaleDateString()}</p> */}
                 </div>
                 <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${tournament.status === 'active' ? 'bg-green-100 text-green-800' :
                     tournament.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :

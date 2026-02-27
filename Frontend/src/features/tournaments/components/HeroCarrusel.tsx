@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGames } from '../../../context/GamesContext';
 import { API_BASE_URL } from '../../../shared/api/endpoints';
 
 export default function HeroCarousel() {
     const { games, isLoading, error } = useGames();
     const [current, setCurrent] = useState(0);
+    const navigate = useNavigate();
 
     // Auto play
     useEffect(() => {
@@ -52,20 +54,20 @@ export default function HeroCarousel() {
                             className="absolute inset-0 bg-cover bg-center"
                             style={{ backgroundImage: `url('${API_BASE_URL}${game.iconUrl}')` }}
                         />
-                        <div className="hero-overlay absolute inset-0" />
+                        <div className="hero-overlay absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
                         <div className="relative z-10 flex flex-col items-center justify-center h-full text-white px-4 text-center pt-16">
-                            <h2 className="text-4xl md:text-6xl font-extrabold mb-4 drop-shadow-lg">
+                            <h2 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight drop-shadow-2xl">
                                 {game.name}
                             </h2>
-                            <p className="text-xl md:text-2xl mb-8 max-w-2xl drop-shadow-md">
+                            <p className="text-xl md:text-2xl mb-10 max-w-3xl drop-shadow-lg text-gray-200">
                                 {game.description}
                             </p>
-                            <a
-                                href={`/juegos/${game.id}`}
-                                className="bg-blue-800 hover:bg-blue-900 text-white font-semibold px-8 py-4 rounded-full text-lg transition shadow-xl"
+                            <button
+                                onClick={() => navigate(`/shop?gameId=${game.id}&is_active=true`)}
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-10 py-4 rounded-full text-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:shadow-[0_0_30px_rgba(79,70,229,0.7)] transform hover:-translate-y-1"
                             >
                                 Ver torneos
-                            </a>
+                            </button>
                         </div>
                     </div>
                 ))}

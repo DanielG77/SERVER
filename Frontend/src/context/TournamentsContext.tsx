@@ -1,22 +1,12 @@
 import React, { createContext, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-
-interface Tournament {
-    id: string;
-    name: string;
-    images?: string[];
-    startAt?: string;
-    priceClient?: number;
-    game?: { name: string };
-    format?: { name: string };
-    // Add other fields as needed
-}
+import type { Tournament } from '@/shared/types/tournament.types';
 
 interface TournamentsContextType {
     tournaments: Tournament[];
     isLoading: boolean;
-    error: any;
+    error: unknown;
 }
 
 const TournamentsContext = createContext<TournamentsContextType | undefined>(undefined);
@@ -34,16 +24,16 @@ interface TournamentsProviderProps {
 }
 
 export const TournamentsProvider: React.FC<TournamentsProviderProps> = ({ children }) => {
-    const { data: tournaments = [], isLoading, error } = useQuery({
+    const { data = [], isLoading, error } = useQuery<Tournament[]>({
         queryKey: ['tournaments'],
         queryFn: async () => {
             const response = await api.get('/tournaments');
-            return response.data.data || [];
+            return response.data.data;
         },
     });
 
     return (
-        <TournamentsContext.Provider value={{ tournaments, isLoading, error }}>
+        <TournamentsContext.Provider value={{ tournaments: data, isLoading, error }}>
             {children}
         </TournamentsContext.Provider>
     );
