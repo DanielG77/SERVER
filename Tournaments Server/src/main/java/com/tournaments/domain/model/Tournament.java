@@ -27,6 +27,8 @@ public class Tournament {
     private final Integer minPlayers;
     private final Integer maxPlayers;
     private final List<Platform> platforms;
+    private final Integer capacity;
+    private final Integer ticketsSold;
 
     public Tournament(
             UUID id,
@@ -47,7 +49,9 @@ public class Tournament {
             boolean isOnline,
             Integer minPlayers,
             Integer maxPlayers,
-            List<Platform> platforms) {
+            List<Platform> platforms,
+            Integer capacity,
+            Integer ticketsSold) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -66,6 +70,8 @@ public class Tournament {
         this.minPlayers = minPlayers;
         this.maxPlayers = maxPlayers;
         this.platforms = platforms;
+        this.capacity = capacity;
+        this.ticketsSold = ticketsSold;
     }
 
     // Getters
@@ -117,10 +123,35 @@ public class Tournament {
         return slug;
     }
 
-    public Game getGame() { return game; }
-    public TournamentFormat getFormat() { return format; }
-    public boolean isOnline() { return isOnline; }
-    public Integer getMinPlayers() { return minPlayers; }
-    public Integer getMaxPlayers() { return maxPlayers; }
-    public List<Platform> getPlatforms() { return platforms; }
+    public Game getGame() {
+        return game;
+    }
+
+    public TournamentFormat getFormat() {
+        return format;
+    }
+
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    public Integer getMinPlayers() {
+        return minPlayers;
+    }
+
+    public Integer getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public List<Platform> getPlatforms() {
+        return platforms;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public Integer getTicketsSold() {
+        return ticketsSold;
+    }
 }

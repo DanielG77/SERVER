@@ -91,6 +91,12 @@ public class TournamentEntity {
     
     @Column(name = "max_players")
     private Integer maxPlayers;
+
+    @Column(name = "capacity")
+    private Integer capacity;
+
+    @Column(name = "tickets_sold")
+    private Integer ticketsSold = 0;
     
     @ManyToMany
     @JoinTable(
@@ -253,6 +259,22 @@ public class TournamentEntity {
 
     public void setMaxPlayers(Integer maxPlayers) {
         this.maxPlayers = maxPlayers;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public Integer getTicketsSold() {
+        return ticketsSold;
+    }
+
+    public void setTicketsSold(Integer ticketsSold) {
+        this.ticketsSold = ticketsSold;
     }
 
     public Set<PlatformEntity> getPlatforms() {

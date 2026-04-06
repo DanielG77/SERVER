@@ -5,6 +5,8 @@ import TournamentDetails from '../pages/TournamentDetails';
 import ProfilePage from '../pages/ProfilePage';
 import AdminDashboard from '../pages/AdminDashboard';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
+import { PaymentPage } from '../pages/PaymentPage';
+import { PaymentStatusPage } from '../pages/PaymentStatusPage';
 
 import { MainLayout } from '../components/Layout';
 import Login from '../pages/Login';
@@ -42,6 +44,22 @@ const router = createBrowserRouter([
                         </RoleGuard>
                     </PrivateRoute>
                 )
+            },
+            {
+                path: '/reservations/:reservationId/pay',
+                element: (
+                    <PrivateRoute>
+                        <PaymentPage />
+                    </PrivateRoute>
+                ),
+            },
+            {
+                path: '/reservations/:reservationId/status',
+                element: (
+                    <PrivateRoute>
+                        <PaymentStatusPage />
+                    </PrivateRoute>
+                ),
             },
             {
                 path: '*',

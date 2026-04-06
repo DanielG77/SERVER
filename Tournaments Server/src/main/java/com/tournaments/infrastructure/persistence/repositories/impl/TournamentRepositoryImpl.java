@@ -1,5 +1,6 @@
 package com.tournaments.infrastructure.persistence.repositories.impl;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.tournaments.domain.model.Tournament;
 import com.tournaments.domain.model.TournamentFilter;
+import com.tournaments.domain.model.TournamentStatus;
 import com.tournaments.domain.pagination.DomainPage;
 import com.tournaments.domain.pagination.PageableRequest;
 import com.tournaments.domain.repository.TournamentRepository;
@@ -102,4 +104,52 @@ public class TournamentRepositoryImpl implements TournamentRepository {
     public void delete(UUID id) {
         jpaTournamentRepository.deleteById(id);
     }
+
+    @Override
+    public Optional<Tournament> findByIdForUpdate(UUID id) {
+        return jpaTournamentRepository.findByIdForUpdate(id)
+                .map(TournamentMapper::toDomain);
+    }
+
+    @Override
+    public List<Tournament> findByStatus(TournamentStatus status, PageableRequest req) {
+        Objects.requireNonNull(status, "TournamentStatus must not be null");
+        Objects.requireNonNull(req, "PageableRequest must not be null");
+
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(req.getPage(), req.getSize());
+
+        List<TournamentEntity> entities = jpaTournamentRepository.findByStatus(status.name(), pageable);
+
+        return entities.stream()
+                .map(TournamentMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<Tournament> findByIdWithLock(UUID tournamentId) {
+        Objects.requireNonNull(tournamentId, "Tournament ID must not be null");
+        return jpaTournamentRepository.findByIdWithLock(tournamentId)
+                .map(TournamentMapper::toDomain);
+    }
+
+    @Override
+    public void deleteById(UUID tournamentId) {
+        Objects.requireNonNull(tournamentId, "Tournament ID must not be null");
+        jpaTournamentRepository.deleteById(tournamentId);
+    }
+
+    @Override
+    public List<Tournament> findAll(PageableRequest req) {
+        Objects.requireNonNull(req, "PageableRequest must not be null");
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(req.getPage(), req.getSize());
+        Page<TournamentEntity> page = jpaTournamentRepository.findAll(pageable);
+        return page.getContent().stream().map(TournamentMapper::toDomain).toList();
+    }
+
+    @Override
+    public Integer countByStatus(TournamentStatus status) {
+        Objects.requireNonNull(status, "TournamentStatus must not be null");
+        return jpaTournamentRepository.countByStatus(status.name());
+    }
+
 }

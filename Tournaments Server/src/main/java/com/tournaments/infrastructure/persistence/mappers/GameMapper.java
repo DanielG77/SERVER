@@ -25,6 +25,7 @@ public class GameMapper {
     //     );
     // }
     public static Game toDomain(GameEntity entity) {
+        if (entity == null) return null;
         return new Game(
             entity.getId(),
             entity.getName(),

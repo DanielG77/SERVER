@@ -25,6 +25,22 @@ export interface PaginatedResponse<T> {
     empty: boolean;
 }
 
+export interface TicketReservation {
+    id: string;
+    userId: number;
+    tournamentId: string;
+    tournamentName: string;
+
+    amount: number;
+    currency: string;
+
+    status: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED';
+
+    createdAt: string;
+    expiresAt: string;
+}
+
+
 // Tournament Status type (from backend ENUM)
 export type TournamentStatus = 'draft' | 'open' | 'running' | 'completed' | 'cancelled';
 

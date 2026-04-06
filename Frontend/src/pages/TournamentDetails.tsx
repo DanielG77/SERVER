@@ -2,6 +2,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useCallback, useMemo } from 'react';
 import { useTournament } from '../hooks/useTournament';
 import { useAuth } from '../context/AuthContext';
+import { useMutation } from '@tanstack/react-query';
+import { reservationService } from '../services/reservationService';
+import ErrorAlert from '../components/ErrorAlert';
 
 /**
  * ImageCarousel Component - Renders a carousel of tournament images with navigation controls
@@ -102,7 +105,12 @@ const TournamentDetails: React.FC = () => {
     const { user } = useAuth();
     const { data: tournament, loading, error } = useTournament(id || '');
 
-    const [isRegistering, setIsRegistering] = useState<boolean>(false);
+    const { mutate: createReservation, isPending: isRegistering, error: reservationError } = useMutation({
+        mutationFn: () => reservationService.createReservation(id!),
+        onSuccess: (data) => {
+            navigate(`/reservations/${data.id}/pay`);
+        },
+    });
 
     /**
      * Handle tournament registration
@@ -112,21 +120,8 @@ const TournamentDetails: React.FC = () => {
             navigate('/login');
             return;
         }
-
-        setIsRegistering(true);
-        try {
-            // TODO: Implement actual tournament registration API call
-            // Example: await tournamentService.registerTournament(tournament.id);
-            console.log('Registering for tournament:', tournament?.id);
-            // For now, show a success response
-            alert('Registration successful!');
-        } catch (err) {
-            console.error('Registration failed:', err);
-            alert('Registration failed. Please try again.');
-        } finally {
-            setIsRegistering(false);
-        }
-    }, [user, tournament?.id, navigate]);
+        createReservation();
+    }, [user, createReservation, navigate]);
 
     /**
      * Render loading state
@@ -311,14 +306,14 @@ const TournamentDetails: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {reservationError && <ErrorAlert message={(reservationError as any).message} />}
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button
                                 onClick={handleRegisterNow}
                                 disabled={isRegistering}
                                 className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-600 disabled:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none disabled:cursor-not-allowed"
                             >
-                                {isRegistering ? 'Registering...' : 'Register Now'}
+                                {isRegistering ? 'Creating Reservation...' : 'Register Now'}
                             </button>
 
                             <button

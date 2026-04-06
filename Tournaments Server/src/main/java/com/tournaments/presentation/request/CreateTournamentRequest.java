@@ -79,6 +79,11 @@ public class CreateTournamentRequest {
     @JsonProperty("max_players")
     private Integer maxPlayers;
 
+    @NotNull(message = "Capacity is required")
+    @Min(value = 1, message = "Capacity must be at least 1")
+    @JsonProperty("capacity")
+    private Integer capacity;
+
     // ===== GETTERS Y SETTERS EXISTENTES =====
     
     public String getName() {
@@ -201,5 +206,13 @@ public class CreateTournamentRequest {
 
     public void setMaxPlayers(Integer maxPlayers) {
         this.maxPlayers = maxPlayers;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
     }
 }

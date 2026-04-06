@@ -1,6 +1,5 @@
 # Stage 1: Build
 FROM node:20-alpine AS builder
-
 WORKDIR /app
 
 # Copiar package.json y lockfile
@@ -12,18 +11,27 @@ RUN npm ci
 # Copiar todo el código
 COPY . .
 
+# Pasar variable de Stripe al build
+ARG VITE_STRIPE_KEY
+ENV VITE_STRIPE_KEY=$VITE_STRIPE_KEY
+
 # Build con Vite
+RUN npm run build
+
+ARG VITE_STRIPE_KEY
+ENV VITE_STRIPE_KEY=$VITE_STRIPE_KEY
+RUN echo "🔑 Stripe key during build: $VITE_STRIPE_KEY"
 RUN npm run build
 
 # Stage 2: Runtime
 FROM node:20-alpine AS runtime
 WORKDIR /app
 
-# Copiar build desde builder
-COPY --from=builder /app/dist ./dist
-
-# Servir la app con "serve"
+# Instalar serve
 RUN npm install -g serve
+
+# Copiar solo el build
+COPY --from=builder /app/dist ./dist
 
 # Exponer puerto
 EXPOSE 5173

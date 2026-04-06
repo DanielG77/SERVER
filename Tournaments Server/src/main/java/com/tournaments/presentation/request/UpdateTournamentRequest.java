@@ -77,6 +77,10 @@ public class UpdateTournamentRequest {
     @JsonProperty("max_players")
     private Integer maxPlayers;
 
+    @Min(value = 1, message = "Capacity must be at least 1")
+    @JsonProperty("capacity")
+    private Integer capacity;
+
     // Getters y Setters
     public String getName() {
         return name;
@@ -198,5 +202,13 @@ public class UpdateTournamentRequest {
 
     public void setMaxPlayers(Integer maxPlayers) {
         this.maxPlayers = maxPlayers;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
     }
 }

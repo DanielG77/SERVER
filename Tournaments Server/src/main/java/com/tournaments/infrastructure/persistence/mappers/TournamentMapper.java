@@ -1,9 +1,9 @@
 package com.tournaments.infrastructure.persistence.mappers;
 
+import java.util.stream.Collectors;
+
 import com.tournaments.domain.model.Tournament;
 import com.tournaments.infrastructure.persistence.entities.TournamentEntity;
-
-import java.util.stream.Collectors;
 
 public class TournamentMapper {
     
@@ -32,7 +32,9 @@ public class TournamentMapper {
                 entity.getPlatforms().stream()
                     .map(PlatformMapper::toDomain)
                     .collect(Collectors.toList()) :
-                null
+                null,
+            entity.getCapacity(),
+            entity.getTicketsSold()
         );
     }
     
@@ -57,6 +59,8 @@ public class TournamentMapper {
         entity.setIsOnline(domain.isOnline());
         entity.setMinPlayers(domain.getMinPlayers());
         entity.setMaxPlayers(domain.getMaxPlayers());
+        entity.setCapacity(domain.getCapacity());
+        entity.setTicketsSold(domain.getTicketsSold());
                 
         return entity;
     }

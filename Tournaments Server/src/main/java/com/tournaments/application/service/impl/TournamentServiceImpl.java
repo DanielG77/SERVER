@@ -7,8 +7,6 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import com.tournaments.domain.pagination.DomainPage;
-import com.tournaments.domain.pagination.PageableRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +18,8 @@ import com.tournaments.domain.model.Game;
 import com.tournaments.domain.model.Tournament;
 import com.tournaments.domain.model.TournamentFilter;
 import com.tournaments.domain.model.TournamentFormat;
+import com.tournaments.domain.pagination.DomainPage;
+import com.tournaments.domain.pagination.PageableRequest;
 import com.tournaments.domain.repository.TournamentRepository;
 import com.tournaments.presentation.request.CreateTournamentRequest;
 import com.tournaments.presentation.request.UpdateTournamentRequest;
@@ -119,7 +119,9 @@ public class TournamentServiceImpl implements TournamentService {
                 request.getIsOnline() != null ? request.getIsOnline() : true,
                 request.getMinPlayers() != null ? request.getMinPlayers() : 1,
                 request.getMaxPlayers(),
-                null // Platforms - dejamos para después
+                null, /* platforms */
+                request.getCapacity(),
+                0 /* ticketsSold */
         );
 
         return tournamentRepository.save(tournament);
@@ -173,6 +175,7 @@ public class TournamentServiceImpl implements TournamentService {
         boolean newIsOnline = request.getIsOnline() != null ? request.getIsOnline() : existing.isOnline();
         Integer newMinPlayers = request.getMinPlayers() != null ? request.getMinPlayers() : existing.getMinPlayers();
         Integer newMaxPlayers = request.getMaxPlayers() != null ? request.getMaxPlayers() : existing.getMaxPlayers();
+        Integer newCapacity = request.getCapacity() != null ? request.getCapacity() : existing.getCapacity();
 
         // Validar número de jugadores
         if (newMinPlayers != null && newMinPlayers <= 0) {
@@ -213,7 +216,9 @@ public class TournamentServiceImpl implements TournamentService {
                 newIsOnline,
                 newMinPlayers,
                 newMaxPlayers,
-                existing.getPlatforms() // Platforms - no se actualiza por ahora
+                existing.getPlatforms(),
+                newCapacity,
+                existing.getTicketsSold()
         );
 
         return tournamentRepository.save(updated);
@@ -245,7 +250,9 @@ public class TournamentServiceImpl implements TournamentService {
                     existing.isOnline(),
                     existing.getMinPlayers(),
                     existing.getMaxPlayers(),
-                    existing.getPlatforms());
+                    existing.getPlatforms(),
+                    existing.getCapacity(),
+                    existing.getTicketsSold());
             tournamentRepository.save(softDeleted);
         }
     }
