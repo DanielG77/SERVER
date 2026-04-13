@@ -23,5 +23,6 @@ public class Payment {
     private String currency;
     private String status;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private String clientSecret;
 }

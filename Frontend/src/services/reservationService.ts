@@ -30,5 +30,11 @@ export const reservationService = {
                 message: error.response?.data?.message || 'Error al obtener reservas'
             };
         }
+    },
+    confirmPayment: async (reservationId: string): Promise<Reservation> => {
+        console.log('[reservationService] Confirming payment for reservation:', reservationId);
+        const response = await api.post(`/api/reservations/${reservationId}/confirm-payment`);
+        console.log('[reservationService] Payment confirmation response:', response.data);
+        return response.data;
     }
 };

@@ -14,6 +14,8 @@ public class PaymentMapper {
                 .reservationId(domain.getReservationId())
                 .amount(domain.getAmount())
                 .currency(domain.getCurrency())
+                .status(domain.getStatus())
+                .updatedAt(domain.getUpdatedAt())
                 .clientSecret(domain.getClientSecret())
                 .build();
     }

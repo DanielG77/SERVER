@@ -17,10 +17,9 @@ public class TicketReservationMapper {
         .status(reservation.getStatus())
         .createdAt(reservation.getCreatedAt())
         .expiresAt(reservation.getExpiresAt())
-        // Valores por defecto temporales
-        .tournamentName("Torneo Demo")           // puedes poner un texto genérico
-        .amount(BigDecimal.valueOf(10.00))       // valor fijo, ej: 10.00
-        .currency("eur")                         // moneda fija
+        .tournamentName(reservation.getTournament() != null ? reservation.getTournament().getName() : "Torneo Sin Nombre")
+        .amount(reservation.getTournament() != null ? reservation.getTournament().getPricePlayer() : BigDecimal.ZERO)
+        .currency("eur")
         .build();
 }
 }

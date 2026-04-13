@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +26,12 @@ import com.tournaments.domain.model.Tournament;
 import com.tournaments.domain.model.TournamentFilter;
 import com.tournaments.domain.pagination.DomainPage;
 import com.tournaments.domain.pagination.PageableRequest;
+import com.tournaments.infrastructure.security.CustomUserDetails;
+import com.tournaments.presentation.request.CancelTournamentRequest;
 import com.tournaments.presentation.request.CreateTournamentRequest;
 import com.tournaments.presentation.request.UpdateTournamentRequest;
 import com.tournaments.presentation.response.ApiResponse;
+import com.tournaments.presentation.response.CancelTournamentResponse;
 import com.tournaments.presentation.response.PaginationMeta;
 
 import jakarta.validation.Valid;
@@ -45,9 +49,10 @@ public class TournamentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Tournament>> create(
-            @Valid @RequestBody CreateTournamentRequest request) {
+            @Valid @RequestBody CreateTournamentRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
 
-        Tournament created = tournamentService.createTournament(request);
+        Tournament created = tournamentService.createTournament(request, currentUser);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -148,5 +153,17 @@ public class TournamentController {
             @RequestParam(defaultValue = "false") boolean hard) {
         tournamentService.deleteTournament(id, hard);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<CancelTournamentResponse>> cancelTournament(
+            @PathVariable UUID id,
+            @Valid @RequestBody(required = false) CancelTournamentRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        if (request == null) {
+            request = new CancelTournamentRequest();
+        }
+        CancelTournamentResponse response = tournamentService.cancelTournament(id, request, currentUser);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

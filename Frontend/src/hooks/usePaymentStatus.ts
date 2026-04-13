@@ -8,16 +8,37 @@ const POLLING_TIMEOUT = 60000; // 60 seconds
 
 export const usePaymentStatus = (reservationId: string | null) => {
     const [isPolling, setIsPolling] = useState(true);
+    const [hasConfirmed, setHasConfirmed] = useState(false);
+
+    // First, try to confirm the payment on mount (if coming from Stripe redirect)
+    useEffect(() => {
+        if (!reservationId || hasConfirmed) return;
+
+        const confirmPayment = async () => {
+            try {
+                console.log('[usePaymentStatus] Attempting to confirm payment for reservation:', reservationId);
+                await reservationService.confirmPayment(reservationId);
+                console.log('[usePaymentStatus] Payment confirmation request sent');
+                setHasConfirmed(true);
+            } catch (error) {
+                console.error('[usePaymentStatus] Error confirming payment:', error);
+                // Continue with polling anyway
+                setHasConfirmed(true);
+            }
+        };
+
+        confirmPayment();
+    }, [reservationId, hasConfirmed]);
 
     const { data: reservation, error, isLoading } = useQuery({
         queryKey: ['reservationStatus', reservationId],
         queryFn: () => reservationService.getReservationById(reservationId!),
-        enabled: !!reservationId && isPolling,
+        enabled: !!reservationId && hasConfirmed && isPolling,
         refetchInterval: POLLING_INTERVAL,
     });
 
     useEffect(() => {
-        if (!reservationId) return;
+        if (!reservationId || !hasConfirmed) return;
 
         const timeoutId = setTimeout(() => {
             setIsPolling(false);
@@ -29,7 +50,7 @@ export const usePaymentStatus = (reservationId: string | null) => {
         }
 
         return () => clearTimeout(timeoutId);
-    }, [reservation, reservationId]);
+    }, [reservation, reservationId, hasConfirmed]);
 
     const isFinalStatus = reservation?.status === 'PAID' || (!isPolling && reservation?.status === 'PENDING');
 

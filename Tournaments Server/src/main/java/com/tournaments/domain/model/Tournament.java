@@ -29,6 +29,7 @@ public class Tournament {
     private final List<Platform> platforms;
     private final Integer capacity;
     private final Integer ticketsSold;
+    private final Long ownerId; // ID del usuario creador del torneo
 
     public Tournament(
             UUID id,
@@ -51,7 +52,8 @@ public class Tournament {
             Integer maxPlayers,
             List<Platform> platforms,
             Integer capacity,
-            Integer ticketsSold) {
+            Integer ticketsSold,
+            Long ownerId) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -72,6 +74,7 @@ public class Tournament {
         this.platforms = platforms;
         this.capacity = capacity;
         this.ticketsSold = ticketsSold;
+        this.ownerId = ownerId;
     }
 
     // Getters
@@ -153,5 +156,9 @@ public class Tournament {
 
     public Integer getTicketsSold() {
         return ticketsSold;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
     }
 }

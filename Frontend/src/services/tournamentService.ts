@@ -4,7 +4,9 @@ import {
     AdminTournament,
     TournamentRequest,
     PaginatedResponse,
-    ApiResponse
+    ApiResponse,
+    CancelTournamentResponse,
+    CancelTournamentRequest
 } from '../shared/types/api.types';
 
 /**
@@ -143,6 +145,20 @@ export const adminTournamentService = {
         const response = await api.delete(`/api/admin/tournaments/${id}`, {
             params: { hardDelete: true }
         });
+        return response.data;
+    },
+
+    /**
+     * Cancelar un torneo y procesar reembolsos masivos
+     * Todas las reservas PAGADAS serán reembolsadas automáticamente
+     */
+    async cancelTournament(
+        id: string,
+        request?: CancelTournamentRequest
+    ): Promise<ApiResponse<CancelTournamentResponse>> {
+        console.log(`[adminTournamentService.cancelTournament] Cancelando torneo ${id}:`, request);
+        const response = await api.post(`/api/admin/tournaments/${id}/cancel`, request || {});
+        console.log('[adminTournamentService.cancelTournament] Respuesta:', response.data);
         return response.data;
     },
 };

@@ -6,7 +6,7 @@ import { gameService } from '../../services/gameService';
 import { adminUserService } from '../../services/userService';
 import TournamentFormModal from '../TournamentFormModal';
 import ConfirmDialog from '../ConfirmDialog';
-import { AdminTournament, TournamentRequest, Game, User } from '../../shared/types/api.types';
+import { AdminTournament, TournamentRequest, Game, User, CancelTournamentResponse } from '../../shared/types/api.types';
 
 const AdminTournamentsTab: React.FC = () => {
     const { showSuccess, showError } = useNotification();
@@ -30,6 +30,12 @@ const AdminTournamentsTab: React.FC = () => {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [tournamentToDelete, setTournamentToDelete] = useState<AdminTournament | null>(null);
     const [isHardDelete, setIsHardDelete] = useState(false);
+
+    // Cancel tournament states
+    const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+    const [tournamentToCancel, setTournamentToCancel] = useState<AdminTournament | null>(null);
+    const [cancelReason, setCancelReason] = useState('');
+    const [isCancelLoading, setIsCancelLoading] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -209,6 +215,52 @@ const AdminTournamentsTab: React.FC = () => {
         }
     };
 
+    const handleCancel = async () => {
+        if (!tournamentToCancel) return;
+
+        try {
+            setIsCancelLoading(true);
+            console.log(`[AdminTournamentsTab] Cancelando torneo ${tournamentToCancel.id}:`, { reason: cancelReason });
+
+            const response = await adminTournamentService.cancelTournament(
+                tournamentToCancel.id,
+                { reason: cancelReason || undefined }
+            ) as unknown as CancelTournamentResponse;
+
+            if (response && 'refundedCount' in response) {
+                // Actualizar el torneo en la lista
+                setTournaments(prev =>
+                    prev.map(t =>
+                        t.id === tournamentToCancel.id
+                            ? { ...t, status: 'CANCELLED' }
+                            : t
+                    )
+                );
+
+                showSuccess(
+                    `Torneo cancelado: ${response.refundedCount} reembolso(s) procesado(s)`
+                );
+
+                // Mostrar errores si hay
+                if (response.failedRefunds && response.failedRefunds.length > 0) {
+                    const failedCount = response.failedRefunds.length;
+                    showError(`⚠️ ${failedCount} reembolso(s) fallido(s) - Revisa los registros`);
+                }
+            } else {
+                showError(response?.message || 'Error al cancelar torneo');
+            }
+
+            setCancelConfirmOpen(false);
+            setTournamentToCancel(null);
+            setCancelReason('');
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Error al cancelar torneo');
+        } finally {
+            setIsCancelLoading(false);
+        }
+    };
+
     const formatDate = (dateString?: string) => {
         if (!dateString) return '—';
         try {
@@ -320,6 +372,19 @@ const AdminTournamentsTab: React.FC = () => {
                                         >
                                             ✏️
                                         </button>
+                                        {tournament.status !== 'CANCELLED' && (
+                                            <button
+                                                onClick={() => {
+                                                    setTournamentToCancel(tournament);
+                                                    setCancelReason('');
+                                                    setCancelConfirmOpen(true);
+                                                }}
+                                                className="text-orange-400 hover:text-orange-300"
+                                                title="Cancelar Torneo"
+                                            >
+                                                ❌
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => {
                                                 setTournamentToDelete(tournament);
@@ -447,6 +512,63 @@ const AdminTournamentsTab: React.FC = () => {
                     setIsHardDelete(false);
                 }}
             />
+
+            {/* Cancel Tournament Modal */}
+            {cancelConfirmOpen && tournamentToCancel && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                    <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 className="text-xl font-semibold mb-4 text-orange-400">
+                            ⚠️ Cancelar Torneo
+                        </h3>
+
+                        <div className="mb-4 p-3 bg-gray-700/50 rounded border border-orange-500/30">
+                            <p className="text-sm text-gray-300">
+                                <span className="font-semibold">Torneo:</span> {tournamentToCancel.name}
+                            </p>
+                            <p className="text-sm text-gray-300 mt-1">
+                                <span className="font-semibold">Propietario:</span> {getUserName(tournamentToCancel.userId)}
+                            </p>
+                            <p className="text-sm text-orange-400 mt-2">
+                                Se procesarán reembolsos automáticos para todas las reservas pagadas.
+                            </p>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-2">
+                                Razón (opcional)
+                            </label>
+                            <textarea
+                                value={cancelReason}
+                                onChange={(e) => setCancelReason(e.target.value)}
+                                placeholder="Explica por qué se cancela este torneo..."
+                                className="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white text-sm focus:outline-none focus:border-orange-500"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setCancelConfirmOpen(false);
+                                    setTournamentToCancel(null);
+                                    setCancelReason('');
+                                }}
+                                disabled={isCancelLoading}
+                                className="flex-1 px-4 py-2 rounded border border-gray-600 hover:bg-gray-700 disabled:opacity-50 transition"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleCancel}
+                                disabled={isCancelLoading}
+                                className="flex-1 px-4 py-2 rounded bg-orange-600 hover:bg-orange-700 disabled:opacity-50 transition font-medium"
+                            >
+                                {isCancelLoading ? 'Procesando...' : 'Confirmar Cancelación'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -39,4 +39,11 @@ public class TicketReservationRepositoryAdapter implements TicketReservationRepo
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<TicketReservation> findByTournamentId(UUID tournamentId) {
+        return jpaRepository.findByTournamentId(tournamentId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

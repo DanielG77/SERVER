@@ -19,6 +19,7 @@ public class TicketReservation {
     private UUID id;
     private Long userId;
     private UUID tournamentId;
+    private Tournament tournament;  // Add tournament reference
     private ReservationStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;

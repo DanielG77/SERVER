@@ -34,7 +34,7 @@ export interface TicketReservation {
     amount: number;
     currency: string;
 
-    status: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED';
+    status: 'PENDING' | 'PAID' | 'REFUNDED' | 'CANCELLED' | 'EXPIRED';
 
     createdAt: string;
     expiresAt: string;
@@ -97,6 +97,7 @@ export interface TournamentRequest {
     isOnline: boolean;
     minPlayers: number;
     maxPlayers: number;
+    capacity?: number;
     images: string[];
     startAt?: string;   // ISO date string
     endAt?: string;
@@ -135,4 +136,21 @@ export interface UserUpdateRequest {
     email?: string;
     roles?: string[];
     isActive?: boolean;
+}
+
+// Cancel Tournament Response
+export interface FailedRefund {
+    paymentId: string;
+    errorMessage: string;
+}
+
+export interface CancelTournamentResponse {
+    tournamentId: string;
+    newStatus: TournamentStatus;
+    refundedCount: number;
+    failedRefunds: FailedRefund[];
+}
+
+export interface CancelTournamentRequest {
+    reason?: string;
 }

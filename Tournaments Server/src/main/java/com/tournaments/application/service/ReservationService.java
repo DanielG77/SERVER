@@ -5,6 +5,9 @@ import java.util.UUID;
 
 import com.tournaments.domain.model.Payment;
 import com.tournaments.domain.model.TicketReservation;
+import com.tournaments.infrastructure.security.CustomUserDetails;
+import com.tournaments.presentation.request.RefundReservationRequest;
+import com.tournaments.presentation.response.RefundReservationResponse;
 
 public interface ReservationService {
     /**
@@ -34,4 +37,15 @@ public interface ReservationService {
     List<TicketReservation> getReservationsForUser(Long userId);
 
     TicketReservation getReservationByIdForUser(UUID reservationId, Long userId);
+
+    /**
+     * Reembolsa una reserva individual.
+     *
+     * @param reservationId The ID of the reservation to refund.
+     * @param request The refund request (may contain reason).
+     * @param currentUser The currently authenticated user.
+     * @return The refund response with details.
+     */
+    RefundReservationResponse refundReservation(UUID reservationId, RefundReservationRequest request,
+            CustomUserDetails currentUser);
 }

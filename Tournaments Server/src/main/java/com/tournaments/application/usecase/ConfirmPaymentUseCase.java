@@ -40,15 +40,28 @@ public class ConfirmPaymentUseCase {
         var tournament = tournamentRepository.findByIdForUpdate(reservation.getTournament().getId())
                 .orElseThrow(() -> new RuntimeException("Tournament not found"));
 
-        // 4. Actualizar el estado de la reserva y el contador de tickets del torneo
+        // ✅ 4. NUEVO: Sincronizar status del pago con Stripe
+        //    Esto asegura que payment.status siempre refleja el estado real en Stripe
+        //    Cuando webhook ejecuta payment_intent.succeeded, también actualiza payment.status
+        if (!payment.getStatus().equals("succeeded")) {
+            log.info("=== SYNCING PAYMENT STATUS ===");
+            log.info("Payment ID: {}, Old Status: {}, New Status: succeeded", 
+                    payment.getId(), payment.getStatus());
+            payment.setStatus("succeeded");
+        }
+
+        // 5. Actualizar el estado de la reserva y el contador de tickets del torneo
         reservation.setStatus(ReservationStatus.PAID);
         tournament.setTicketsSold(tournament.getTicketsSold() + 1);
 
-        // 5. Guardar los cambios
+        // 6. Guardar los cambios (incluyendo payment status)
+        paymentRepository.save(payment);
         reservationRepository.save(reservation);
         tournamentRepository.save(tournament);
 
-        log.info("Reservation {} successfully marked as PAID. Tournament {} tickets sold: {}",
+        log.info("=== PAYMENT CONFIRMATION COMPLETE ===");
+        log.info("Payment {} now has status: succeeded", payment.getId());
+        log.info("Reservation {} marked as PAID. Tournament {} tickets sold: {}",
                 reservation.getId(), tournament.getId(), tournament.getTicketsSold());
     }
 }

@@ -7,12 +7,16 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tournaments.application.service.GameService;
 import com.tournaments.application.service.TournamentFormatService;
 import com.tournaments.application.service.TournamentService;
+import com.tournaments.application.usecase.CancelTournamentUseCase;
 import com.tournaments.domain.enums.TournamentStatus;
 import com.tournaments.domain.model.Game;
 import com.tournaments.domain.model.Tournament;
@@ -21,26 +25,39 @@ import com.tournaments.domain.model.TournamentFormat;
 import com.tournaments.domain.pagination.DomainPage;
 import com.tournaments.domain.pagination.PageableRequest;
 import com.tournaments.domain.repository.TournamentRepository;
+import com.tournaments.infrastructure.security.CustomUserDetails;
 import com.tournaments.presentation.request.CreateTournamentRequest;
 import com.tournaments.presentation.request.UpdateTournamentRequest;
+import com.tournaments.presentation.request.CancelTournamentRequest;
+import com.tournaments.presentation.response.CancelTournamentResponse;
 import com.tournaments.shared.exceptions.TournamentNotFoundException;
+import com.tournaments.infrastructure.persistence.repositories.jpa.JpaTournamentRepository;
+import com.tournaments.infrastructure.persistence.entities.TournamentEntity;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
 
+    private static final Logger logger = LoggerFactory.getLogger(TournamentServiceImpl.class);
+
     private final TournamentRepository tournamentRepository;
+    private final JpaTournamentRepository jpaTournamentRepository;
     private final GameService gameService;
     private final TournamentFormatService tournamentFormatService;
+    private final CancelTournamentUseCase cancelTournamentUseCase;
     private static final Pattern NONLATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
 
     public TournamentServiceImpl(
             TournamentRepository tournamentRepository,
+            JpaTournamentRepository jpaTournamentRepository,
             GameService gameService,
-            TournamentFormatService tournamentFormatService) {
+            TournamentFormatService tournamentFormatService,
+            CancelTournamentUseCase cancelTournamentUseCase) {
         this.tournamentRepository = tournamentRepository;
+        this.jpaTournamentRepository = jpaTournamentRepository;
         this.gameService = gameService;
         this.tournamentFormatService = tournamentFormatService;
+        this.cancelTournamentUseCase = cancelTournamentUseCase;
     }
 
     @Override
@@ -59,7 +76,7 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     @Transactional
-    public Tournament createTournament(CreateTournamentRequest request) {
+    public Tournament createTournament(CreateTournamentRequest request, CustomUserDetails currentUser) {
         // Validar fechas
         if (request.getStartAt() != null && request.getEndAt() != null) {
             if (request.getEndAt().isBefore(request.getStartAt())) {
@@ -121,7 +138,8 @@ public class TournamentServiceImpl implements TournamentService {
                 request.getMaxPlayers(),
                 null, /* platforms */
                 request.getCapacity(),
-                0 /* ticketsSold */
+                0, /* ticketsSold */
+                currentUser.getId() /* ownerId */
         );
 
         return tournamentRepository.save(tournament);
@@ -218,7 +236,8 @@ public class TournamentServiceImpl implements TournamentService {
                 newMaxPlayers,
                 existing.getPlatforms(),
                 newCapacity,
-                existing.getTicketsSold()
+                existing.getTicketsSold(),
+                existing.getOwnerId()
         );
 
         return tournamentRepository.save(updated);
@@ -252,7 +271,8 @@ public class TournamentServiceImpl implements TournamentService {
                     existing.getMaxPlayers(),
                     existing.getPlatforms(),
                     existing.getCapacity(),
-                    existing.getTicketsSold());
+                    existing.getTicketsSold(),
+                    existing.getOwnerId());
             tournamentRepository.save(softDeleted);
         }
     }
@@ -264,5 +284,62 @@ public class TournamentServiceImpl implements TournamentService {
         String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
         String slug = NONLATIN.matcher(normalized).replaceAll("");
         return slug.toLowerCase(Locale.ENGLISH);
+    }
+
+    @Override
+    @Transactional
+    public CancelTournamentResponse cancelTournament(UUID id, CancelTournamentRequest request, 
+            CustomUserDetails currentUser) {
+        logger.info("=== BEGIN CANCEL TOURNAMENT {} ===", id);
+        
+        try {
+            // 1. Ejecutar el usecase de cancelación (procesa reembolsos Stripe)
+            logger.debug("Executing CancelTournamentUseCase for tournament {}", id);
+            CancelTournamentUseCase.CancelTournamentResult result = cancelTournamentUseCase.execute(id, currentUser);
+            
+            logger.info("CancelTournamentUseCase completed: refunded={}, failed={}",
+                result.getRefundedCount(), result.getFailedRefunds().size());
+
+            // 2. ✅ SOLUCIÓN: Cargar la entidad JPA directamente (no a través del mapper)
+            //    Esto preserva TODAS las relaciones existentes, especialmente 'owner'
+            logger.debug("Loading tournament entity for status update");
+            TournamentEntity existingEntity = jpaTournamentRepository.findById(id)
+                    .orElseThrow(() -> new TournamentNotFoundException(id));
+
+            // 3. ✅ Actualizar SOLO el campo status en la entidad persistida
+            //    Hibernacte usa "dirty checking" para detectar cambios
+            //    Si la entidad está dentro de la transacción, se guardará automáticamente
+            existingEntity.setStatus(TournamentStatus.CANCELLED);
+            logger.info("Tournament status updated to CANCELLED");
+            
+            // 4. Guardar explícitamente (aunque Hibernate lo haría automáticamente)
+            jpaTournamentRepository.save(existingEntity);
+            logger.info("Tournament entity persisted to database");
+
+            // 5. Construir y retornar la respuesta
+            logger.info("=== END CANCEL TOURNAMENT {} (SUCCESS) ===", id);
+            
+            return CancelTournamentResponse.builder()
+                    .tournamentId(result.getTournamentId())
+                    .newStatus(result.getNewStatus())
+                    .refundedCount(result.getRefundedCount())
+                    .failedRefunds(result.getFailedRefunds().stream()
+                            .map(f -> CancelTournamentResponse.FailedRefund.builder()
+                                    .paymentId(f.getPaymentId())
+                                    .errorMessage(f.getErrorMessage())
+                                    .build())
+                            .toList())
+                    .build();
+                    
+        } catch (DataIntegrityViolationException e) {
+            logger.error("=== END CANCEL TOURNAMENT {} (DATA INTEGRITY VIOLATION) ===", id);
+            logger.error("Database constraint violation during tournament cancellation: {}", 
+                e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("=== END CANCEL TOURNAMENT {} (FAILED) ===", id);
+            logger.error("Unexpected error during tournament cancellation", e);
+            throw e;
+        }
     }
 }

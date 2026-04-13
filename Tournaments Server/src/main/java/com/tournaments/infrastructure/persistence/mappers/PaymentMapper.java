@@ -9,14 +9,21 @@ public class PaymentMapper {
         if (entity == null) {
             return null;
         }
+
+        Long userId = entity.getReservation() != null && entity.getReservation().getUser() != null
+                ? entity.getReservation().getUser().getId()
+                : null;
+
         return Payment.builder()
                 .id(entity.getId())
-                .reservationId(entity.getReservation().getId())
+                .userId(userId)
+                .reservationId(entity.getReservation() != null ? entity.getReservation().getId() : null)
                 .stripePaymentIntentId(entity.getStripePaymentIntentId())
                 .amount(entity.getAmount())
                 .currency(entity.getCurrency())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
@@ -24,15 +31,15 @@ public class PaymentMapper {
         if (domain == null) {
             return null;
         }
+
         PaymentEntity entity = new PaymentEntity();
         entity.setId(domain.getId());
-        // Note: We don't set the reservation here, as it's managed by the relationship.
-        // The reservation should be set on the entity before saving.
         entity.setStripePaymentIntentId(domain.getStripePaymentIntentId());
         entity.setAmount(domain.getAmount());
         entity.setCurrency(domain.getCurrency());
         entity.setStatus(domain.getStatus());
         entity.setCreatedAt(domain.getCreatedAt());
+        entity.setUpdatedAt(domain.getUpdatedAt());
         return entity;
     }
 }

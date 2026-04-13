@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.tournaments.domain.exception.InvalidTournamentStateException;
+import com.tournaments.domain.exception.PaymentRefundException;
 import com.tournaments.domain.exception.TicketReservationException;
+import com.tournaments.domain.exception.TournamentNotFoundException;
 import com.tournaments.presentation.response.ApiResponse;
 
 import jakarta.validation.ConstraintViolationException;
@@ -89,6 +92,27 @@ public class GlobalExceptionHandler {
             com.tournaments.domain.exception.UnauthorizedOperationException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(TournamentNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTournamentNotFoundExceptionNew(
+            TournamentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidTournamentStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidTournamentStateException(
+            InvalidTournamentStateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentRefundException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePaymentRefundException(
+            PaymentRefundException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Payment refund failed: " + ex.getStripeErrorMessage()));
     }
 
     // Runtime genérica (fallback)

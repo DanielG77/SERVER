@@ -109,6 +109,7 @@ const TournamentFormModal: React.FC<TournamentFormModalProps> = ({
             const dataToSend = {
                 ...formData,
                 images: formData.images.filter(url => url.trim() !== ''),
+                capacity: formData.maxPlayers,
             };
             await onSubmit(dataToSend);
         } catch (error) {

@@ -10,6 +10,8 @@ public class TournamentMapper {
     public static Tournament toDomain(TournamentEntity entity) {
         if (entity == null) return null;
         
+        Long ownerId = entity.getOwner() != null ? entity.getOwner().getId() : null;
+        
         return new Tournament(
             entity.getId(),
             entity.getName(),
@@ -34,7 +36,8 @@ public class TournamentMapper {
                     .collect(Collectors.toList()) :
                 null,
             entity.getCapacity(),
-            entity.getTicketsSold()
+            entity.getTicketsSold(),
+            ownerId
         );
     }
     

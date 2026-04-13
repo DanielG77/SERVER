@@ -10,4 +10,5 @@ public interface TicketReservationRepository {
     TicketReservation save(TicketReservation ticketReservation);
     Optional<TicketReservation> findById(UUID id);
     List<TicketReservation> findByUserId(Long userId);
+    List<TicketReservation> findByTournamentId(UUID tournamentId);
 }

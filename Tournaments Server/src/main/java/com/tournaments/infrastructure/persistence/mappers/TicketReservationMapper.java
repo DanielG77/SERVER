@@ -15,6 +15,7 @@ public class TicketReservationMapper {
                 .id(entity.getId())
                 .userId(entity.getUser().getId())
                 .tournamentId(entity.getTournament().getId())
+                .tournament(TournamentMapper.toDomain(entity.getTournament()))
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .expiresAt(entity.getExpiresAt())

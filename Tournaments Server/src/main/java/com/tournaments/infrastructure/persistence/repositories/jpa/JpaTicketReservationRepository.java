@@ -14,6 +14,7 @@ import com.tournaments.infrastructure.persistence.entities.TicketReservationEnti
 @Repository
 public interface JpaTicketReservationRepository extends JpaRepository<TicketReservationEntity, UUID> {
     List<TicketReservationEntity> findByUserId(Long userId);
+    List<TicketReservationEntity> findByTournamentId(UUID tournamentId);
 
     @Query("SELECT r FROM TicketReservationEntity r WHERE r.status = 'PENDING' AND r.expiresAt < :now")
     List<TicketReservationEntity> findPendingExpired(LocalDateTime now);

@@ -10,10 +10,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tournaments.application.service.ReservationService;
+import com.tournaments.application.usecase.ConfirmPaymentUseCase;
 import com.tournaments.domain.model.Payment;
 import com.tournaments.domain.model.TicketReservation;
 import com.tournaments.infrastructure.security.CustomUserDetails;
@@ -21,10 +23,13 @@ import com.tournaments.presentation.dto.PaymentDTO;
 import com.tournaments.presentation.dto.TicketReservationDTO;
 import com.tournaments.presentation.mapper.PaymentMapper;
 import com.tournaments.presentation.mapper.TicketReservationMapper;
+import com.tournaments.presentation.request.RefundReservationRequest;
+import com.tournaments.presentation.response.RefundReservationResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final ConfirmPaymentUseCase confirmPaymentUseCase;
 
     @PostMapping("/tournaments/{tournamentId}/reservations")
     @Operation(summary = "Create a ticket reservation for a tournament")
@@ -72,5 +78,40 @@ public class ReservationController {
                 .map(TicketReservationMapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reservationDTOs);
+    }
+
+    @PostMapping("/reservations/{reservationId}/refund")
+    @Operation(summary = "Refund a specific ticket reservation")
+    public ResponseEntity<RefundReservationResponse> refundReservation(
+            @PathVariable UUID reservationId,
+            @Valid @RequestBody(required = false) RefundReservationRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        if (request == null) {
+            request = new RefundReservationRequest();
+        }
+        RefundReservationResponse response = reservationService.refundReservation(reservationId, request, currentUser);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reservations/{reservationId}/confirm-payment")
+    @Operation(summary = "Confirm payment for a reservation (called after Stripe redirect)")
+    public ResponseEntity<TicketReservationDTO> confirmPayment(
+            @PathVariable UUID reservationId,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        // Get reservation to find the payment and confirm it
+        TicketReservation reservation = reservationService.getReservationByIdForUser(reservationId, currentUser.getId());
+        
+        // Get the most recent payment for this reservation
+        if (reservation.getPayments() != null && !reservation.getPayments().isEmpty()) {
+            Payment latestPayment = reservation.getPayments().get(reservation.getPayments().size() - 1);
+            
+            // Confirm the payment using the use case
+            confirmPaymentUseCase.execute(latestPayment.getStripePaymentIntentId());
+            
+            // Fetch updated reservation
+            reservation = reservationService.getReservationByIdForUser(reservationId, currentUser.getId());
+        }
+        
+        return ResponseEntity.ok(TicketReservationMapper.toDto(reservation));
     }
 }

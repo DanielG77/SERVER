@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication; // ✅ IMPORT
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,9 +24,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tournaments.application.dto.TournamentRequestDto;
 import com.tournaments.application.dto.TournamentResponseDto;
 import com.tournaments.application.service.AdminTournamentService;
+import com.tournaments.application.service.TournamentService;
 import com.tournaments.infrastructure.persistence.entities.UserEntity;
 import com.tournaments.infrastructure.persistence.repositories.JpaUserRepository;
+import com.tournaments.infrastructure.security.CustomUserDetails;
+import com.tournaments.presentation.request.CancelTournamentRequest;
 import com.tournaments.presentation.response.ApiResponse;
+import com.tournaments.presentation.response.CancelTournamentResponse;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/admin/tournaments")
@@ -33,12 +40,15 @@ import com.tournaments.presentation.response.ApiResponse;
 public class AdminTournamentController {
 
     private final AdminTournamentService adminTournamentService;
+    private final TournamentService tournamentService;
     private final JpaUserRepository userRepository; // ✅ DECLARAR
 
     public AdminTournamentController(
             AdminTournamentService adminTournamentService,
+            TournamentService tournamentService,
             JpaUserRepository userRepository) { // ✅ INYECTAR
         this.adminTournamentService = adminTournamentService;
+        this.tournamentService = tournamentService;
         this.userRepository = userRepository;
     }
 
@@ -125,5 +135,24 @@ public class AdminTournamentController {
         }
     }
 
+    /**
+     * POST /api/admin/tournaments/{id}/cancel
+     * Cancela un torneo y procesa reembolsos masivos para todos los pagos
+     * Solo disponible para administradores con role ADMIN
+     */
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<CancelTournamentResponse>> cancelTournament(
+            @PathVariable UUID id,
+            @Valid @RequestBody(required = false) CancelTournamentRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        
+        if (request == null) {
+            request = new CancelTournamentRequest();
+        }
+        
+        CancelTournamentResponse response = tournamentService.cancelTournament(id, request, currentUser);
+        return ResponseEntity.ok(ApiResponse.success(response, "Torneo cancelado correctamente"));
+    }
 
 }
+

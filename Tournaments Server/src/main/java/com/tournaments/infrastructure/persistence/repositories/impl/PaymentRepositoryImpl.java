@@ -1,7 +1,9 @@
 package com.tournaments.infrastructure.persistence.repositories.impl;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -52,5 +54,12 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public Optional<Payment> findByStripePaymentIntentId(String stripePaymentIntentId) {
         return jpaPaymentRepository.findByStripePaymentIntentId(stripePaymentIntentId).map(PaymentMapper::toDomain);
+    }
+
+    @Override
+    public List<Payment> findByReservationId(UUID reservationId) {
+        return jpaPaymentRepository.findByReservationId(reservationId).stream()
+                .map(PaymentMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }
