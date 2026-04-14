@@ -10,16 +10,16 @@ Este proyecto ha sido completamente dockerizado para facilitar el despliegue y d
 ## Estructura
 
 - `docker-compose.yml`: Orquestación de servicios (Base de datos, Backend, Frontend).
-- `.env.example`: Variables de entorno por defecto.
+- `.env`: Variables de entorno por defecto.
 
 ## Pasos para iniciar (Quickstart)
 
 1. **Configurar entorno**:
    Copia el archivo de ejemplo a `.env` (opcional, docker-compose usará valores por defecto si no existe, pero se recomienda crearlo):
    ```bash
-   cp .env.example .env
+   cp .env
    # En Windows Powershell:
-   # Copy-Item .env.example .env
+   # Copy-Item .env .env
    ```
 
 2. **Construir y levantar**:

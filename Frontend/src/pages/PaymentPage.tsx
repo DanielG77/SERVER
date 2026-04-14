@@ -9,7 +9,14 @@ import ErrorAlert from '../components/ErrorAlert';
 import type { PaymentResponse } from '../shared/types/payment.types';
 import type { UseMutationResult } from '@tanstack/react-query';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_KEY);
+// Debug: Verify Stripe public key is loaded
+if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+    console.error('❌ VITE_STRIPE_PUBLIC_KEY is undefined. Check your .env file.');
+} else {
+    console.log('✅ Stripe public key loaded:', import.meta.env.VITE_STRIPE_PUBLIC_KEY.substring(0, 20) + '...');
+}
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export function PaymentPage() {
     // 1. Todos los hooks al principio, sin condiciones intermedias
