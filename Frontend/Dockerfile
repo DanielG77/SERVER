@@ -1,40 +1,22 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+﻿FROM node:20-alpine
+
 WORKDIR /app
 
-# Copiar package.json y lockfile
+# Copiar archivos de configuración
 COPY package.json package-lock.json ./
+COPY vite.config.js ./
 
 # Instalar dependencias
 RUN npm ci
 
-# Copiar todo el código
+# Copiar código fuente
 COPY . .
 
-# Pasar variable de Stripe al build
-ARG VITE_STRIPE_KEY
-ENV VITE_STRIPE_KEY=$VITE_STRIPE_KEY
-
-# Build con Vite
-RUN npm run build
-
-ARG VITE_STRIPE_KEY
-ENV VITE_STRIPE_KEY=$VITE_STRIPE_KEY
-RUN echo "🔑 Stripe key during build: $VITE_STRIPE_KEY"
-RUN npm run build
-
-# Stage 2: Runtime
-FROM node:20-alpine AS runtime
-WORKDIR /app
-
-# Instalar serve
-RUN npm install -g serve
-
-# Copiar solo el build
-COPY --from=builder /app/dist ./dist
-
-# Exponer puerto
+# Exponer puerto 5173
 EXPOSE 5173
 
-# Comando por defecto
-CMD ["serve", "-s", "dist", "-l", "5173"]
+# ✅ VARIABLE para activar el proxy de Docker
+ENV DOCKER_ENV=true
+
+# Ejecutar Vite en dev mode (con proxy activo)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

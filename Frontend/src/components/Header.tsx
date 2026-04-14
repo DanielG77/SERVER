@@ -54,6 +54,7 @@ const Header: React.FC = () => {
                     {/* Navegación Desktop */}
                     <nav className="hidden md:flex space-x-6 items-center text-sm font-medium">
                         <NavLink to="/shop" className={navLinkClasses}>Explorar</NavLink>
+                        <NavLink to="/search" className={navLinkClasses}>🔍 Buscar</NavLink>
                         <NavLink to="/servicios" className={navLinkClasses}>Servicios</NavLink>
                         <NavLink to="/merchant" className={navLinkClasses}>Merchant</NavLink>
 
@@ -151,6 +152,16 @@ const Header: React.FC = () => {
                             onClick={toggleMobileMenu}
                         >
                             Explorar
+                        </NavLink>
+                        <NavLink
+                            to="/search"
+                            className={({ isActive }) =>
+                                `block px-3 py-2 rounded ${isHome ? 'hover:bg-white/10' : 'hover:bg-gray-100'} ${isActive ? (isHome ? 'bg-white/20' : 'bg-gray-200') : ''
+                                }`
+                            }
+                            onClick={toggleMobileMenu}
+                        >
+                            🔍 Buscar
                         </NavLink>
                         <NavLink
                             to="/servicios"

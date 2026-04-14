@@ -7,6 +7,7 @@ import AdminDashboard from '../pages/AdminDashboard';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
 import { PaymentPage } from '../pages/PaymentPage';
 import { PaymentStatusPage } from '../pages/PaymentStatusPage';
+import { SearchPage } from '../pages/SearchPage';
 
 import { MainLayout } from '../components/Layout';
 import Login from '../pages/Login';
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
             { path: '/home', element: <HomePage /> },
             { path: '/shop', element: <ShopPage /> },
             { path: '/shop/:id', element: <TournamentDetails /> },
+            { path: '/search', element: <SearchPage /> },
             { path: '/login', element: <Login /> },
             { path: '/unauthorized', element: <UnauthorizedPage /> },
             {
