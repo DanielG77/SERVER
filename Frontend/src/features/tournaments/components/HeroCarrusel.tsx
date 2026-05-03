@@ -39,6 +39,7 @@ export default function HeroCarousel() {
         );
     }
 
+    console.log('Juegos cargados en HeroCarousel:', games);
     return (
         <section className="relative h-screen w-full overflow-hidden" aria-label="Carrusel de juegos">
             <div className="relative h-full w-full">
@@ -50,30 +51,55 @@ export default function HeroCarousel() {
                         data-index={index}
                         aria-hidden={index !== current}
                     >
+                        {/* Background */}
                         <div
                             className="absolute inset-0 bg-cover bg-center"
-                            style={{ backgroundImage: `url('${API_BASE_URL}${game.iconUrl}')` }}
+                            style={{ backgroundImage: `url('${game.iconUrl}')` }}
                         />
-                        <div className="hero-overlay absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
+
+                        {/* Overlay */}
+                        <div className="hero-overlay absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/70 to-slate-900/30" />
+
+                        {/* Content */}
                         <div className="relative z-10 flex flex-col items-center justify-center h-full text-white px-4 text-center pt-16">
-                            <h2 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight drop-shadow-2xl">
-                                {game.name}
-                            </h2>
-                            <p className="text-xl md:text-2xl mb-10 max-w-3xl drop-shadow-lg text-gray-200">
-                                {game.description}
-                            </p>
-                            <button
-                                onClick={() => navigate(`/shop?gameId=${game.id}&is_active=true`)}
-                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-10 py-4 rounded-full text-lg transition-all shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:shadow-[0_0_30px_rgba(79,70,229,0.7)] transform hover:-translate-y-1"
-                            >
-                                Ver torneos
-                            </button>
+                            <div className="max-w-4xl">
+                                {/* Title */}
+                                <h1 className="text-6xl md:text-7xl lg:text-8xl font-black mb-4 tracking-tighter drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-green-300">
+                                    {game.name}
+                                </h1>
+
+                                {/* Subtitle */}
+                                <p className="text-lg md:text-xl mb-8 drop-shadow-lg text-green-300 font-bold">
+                                    Torneos • Locales para Eventos • Gaming Shop
+                                </p>
+
+                                {/* Description */}
+                                <p className="text-base md:text-lg mb-12 max-w-2xl mx-auto drop-shadow-lg text-gray-300 leading-relaxed">
+                                    {game.description}
+                                </p>
+
+                                {/* CTAs */}
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                    <button
+                                        onClick={() => navigate(`/shop?gameId=${game.id}&is_active=true`)}
+                                        className="px-10 py-4 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-bold text-lg transition-all shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/80 hover:-translate-y-1 transform"
+                                    >
+                                        🎮 Ver Torneos
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/shop')}
+                                        className="px-10 py-4 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-lime-400 hover:to-green-500 text-white font-bold text-lg transition-all shadow-lg shadow-green-500/50 hover:shadow-green-500/80 hover:-translate-y-1 transform border border-white/20"
+                                    >
+                                        📍 Reservar Local
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Botones anterior/siguiente */}
+            {/* Prev Button */}
             <button
                 onClick={prevSlide}
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition focus:outline-none focus:ring-2 focus:ring-white"
@@ -83,6 +109,8 @@ export default function HeroCarousel() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
+
+            {/* Next Button */}
             <button
                 onClick={nextSlide}
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition focus:outline-none focus:ring-2 focus:ring-white"
@@ -93,7 +121,7 @@ export default function HeroCarousel() {
                 </svg>
             </button>
 
-            {/* Dots indicadores */}
+            {/* Indicators */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
                 {games.map((_, index) => (
                     <button

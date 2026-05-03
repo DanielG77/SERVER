@@ -14,6 +14,7 @@ import com.tournaments.domain.model.Tournament;
 import com.tournaments.infrastructure.ai.AiGatewayService;
 import com.tournaments.infrastructure.ai.AiHealthStatus;
 import com.tournaments.infrastructure.ai.AiProvider;
+import com.tournaments.presentation.request.SearchIntent;
 
 @Service
 public class AiGatewayServiceImpl implements AiGatewayService {
@@ -66,6 +67,48 @@ public class AiGatewayServiceImpl implements AiGatewayService {
         }
 
         return "Torneo relevante para tu búsqueda";
+    }
+
+    @Override
+    public SearchIntent interpretQuery(String naturalLanguageQuery) {
+        for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                AiProvider provider = selectNextProvider();
+                logger.info("Attempting query interpretation with provider: {}", provider.getName());
+
+                SearchIntent intent = provider.interpretQuery(naturalLanguageQuery);
+
+                logger.info("Successfully interpreted query using provider: {}. Confidence: {}",
+                    provider.getName(), intent.getConfidence());
+                return intent;
+
+            } catch (Exception e) {
+                logger.warn("AI provider failed to interpret query (attempt {}/{}): {}",
+                    attempt + 1, MAX_RETRIES, e.getMessage());
+
+                if (attempt == MAX_RETRIES - 1) {
+                    logger.error("All AI providers exhausted for query interpretation");
+                    // Return intent with confidence 0 for fallback to heuristic parsing
+                    SearchIntent fallbackIntent = new SearchIntent();
+                    fallbackIntent.setConfidence(0.0);
+                    fallbackIntent.setKeywords(extractKeywordsBasic(naturalLanguageQuery));
+                    return fallbackIntent;
+                }
+            }
+        }
+
+        // Fallback response
+        SearchIntent fallbackIntent = new SearchIntent();
+        fallbackIntent.setConfidence(0.0);
+        fallbackIntent.setKeywords(extractKeywordsBasic(naturalLanguageQuery));
+        return fallbackIntent;
+    }
+
+    /**
+     * Basic keyword extraction for fallback when AI fails
+     */
+    private List<String> extractKeywordsBasic(String query) {
+        return Arrays.asList(query.toLowerCase().split("\\s+"));
     }
 
     @Override

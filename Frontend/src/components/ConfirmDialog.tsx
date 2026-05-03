@@ -48,8 +48,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                         onClick={handleConfirm}
                         disabled={isLoading}
                         className={`px-4 py-2 rounded-md text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${isDangerous
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-blue-600 hover:bg-blue-700'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-cyan-600 hover:bg-cyan-700'
                             }`}
                     >
                         {isLoading && (

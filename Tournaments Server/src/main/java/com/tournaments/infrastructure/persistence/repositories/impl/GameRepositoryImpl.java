@@ -47,6 +47,19 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     @Override
+    public Optional<Game> findByNameIgnoreCase(String name) {
+        return jpaGameRepository.findByNameIgnoreCase(name)
+                .map(GameMapper::toDomain);
+    }
+
+    @Override
+    public List<Game> findByNameIgnoreCaseContaining(String name) {
+        return jpaGameRepository.findByNameIgnoreCaseContaining(name).stream()
+                .map(GameMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public boolean existsById(Long id) {
         return jpaGameRepository.existsById(id);
     }

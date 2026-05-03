@@ -66,7 +66,7 @@ const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         placeholder="Search tournaments..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
                 </div>
 
@@ -76,7 +76,7 @@ const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                     <select
                         value={filters.status}
                         onChange={(e) => onFilterChange('status', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     >
                         <option value="">All</option>
                         <option value="draft">Draft</option>
@@ -93,7 +93,7 @@ const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                     <select
                         value={filters.gameId}
                         onChange={(e) => onFilterChange('gameId', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     >
                         <option value="">All Games</option>
                         {loadingGames && <option>Loading...</option>}
@@ -112,7 +112,7 @@ const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                     <select
                         value={filters.sort}
                         onChange={(e) => onFilterChange('sort', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     >
                         <option value="name">Name</option>
                         <option value="startAt">Start Date</option>

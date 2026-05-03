@@ -9,6 +9,8 @@ public interface GameRepository {
     List<Game> findAll();
     Optional<Game> findById(Long id);
     Optional<Game> findByName(String name);
+    Optional<Game> findByNameIgnoreCase(String name);
+    List<Game> findByNameIgnoreCaseContaining(String name);
     List<Game> findByIdIn(List<Long> ids);
     boolean existsById(Long id);
 }

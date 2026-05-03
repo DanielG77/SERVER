@@ -85,7 +85,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, tournamentName })
                             onClick={() => handleDotClick(index)}
                             aria-label={`View image ${index + 1}`}
                             className={`h-2.5 rounded-full transition-all duration-300 ${index === currentIndex
-                                ? 'bg-blue-400 w-8'
+                                ? 'bg-cyan-400 w-8'
                                 : 'bg-slate-600 w-2.5 hover:bg-slate-500'
                                 }`}
                         />
@@ -128,9 +128,9 @@ const TournamentDetails: React.FC = () => {
      */
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-slate-600 border-t-blue-400 rounded-full animate-spin" />
+                    <div className="w-12 h-12 border-4 border-slate-600 border-t-cyan-400 rounded-full animate-spin" />
                     <p className="text-slate-300 text-lg">Loading tournament details...</p>
                 </div>
             </div>
@@ -142,11 +142,11 @@ const TournamentDetails: React.FC = () => {
      */
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6">
-                <div className="max-w-2xl mx-auto">
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white p-6">
+                <div className="max-w-5xl mx-auto">
                     <button
-                        onClick={() => navigate(-1)}
-                        className="mb-6 text-blue-400 hover:text-blue-300 transition font-medium text-lg"
+                        onClick={() => navigate('/')}
+                        className="mb-6 text-cyan-400 hover:text-cyan-300 transition font-medium text-lg"
                     >
                         ← Back
                     </button>
@@ -169,7 +169,7 @@ const TournamentDetails: React.FC = () => {
                 <div className="max-w-2xl mx-auto">
                     <button
                         onClick={() => navigate(-1)}
-                        className="mb-6 text-blue-400 hover:text-blue-300 transition font-medium text-lg"
+                        className="mb-6 text-cyan-400 hover:text-cyan-300 transition font-medium text-lg"
                     >
                         ← Back
                     </button>
@@ -179,7 +179,7 @@ const TournamentDetails: React.FC = () => {
                         <p className="text-slate-400 mb-6">The tournament you're looking for doesn't exist or has been removed.</p>
                         <button
                             onClick={() => navigate('/shop')}
-                            className="inline-block bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                            className="inline-block bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
                         >
                             Back to Shop
                         </button>
@@ -219,13 +219,13 @@ const TournamentDetails: React.FC = () => {
      */
     console.log('Tournament data:', tournament); // Debug log for tournament data
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
             <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
                 {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
-                    className="mb-8 text-blue-400 hover:text-blue-300 transition font-medium text-lg"
+                    className="mb-8 text-cyan-400 hover:text-cyan-300 transition font-medium text-lg"
                 >
                     ← Back
                 </button>
@@ -311,7 +311,7 @@ const TournamentDetails: React.FC = () => {
                             <button
                                 onClick={handleRegisterNow}
                                 disabled={isRegistering}
-                                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 disabled:from-slate-600 disabled:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none disabled:cursor-not-allowed"
+                                className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 disabled:from-slate-600 disabled:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none disabled:cursor-not-allowed"
                             >
                                 {isRegistering ? 'Creating Reservation...' : 'Register Now'}
                             </button>
@@ -325,7 +325,7 @@ const TournamentDetails: React.FC = () => {
                         </div>
 
                         {!user && (
-                            <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-blue-200 text-sm">
+                            <div className="bg-cyan-900/30 border border-cyan-700/50 rounded-lg p-4 text-cyan-200 text-sm">
                                 <p>Sign in to register for this tournament</p>
                             </div>
                         )}

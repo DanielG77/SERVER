@@ -10,9 +10,11 @@ export const MainLayout = () => {
     return (
         <>
             <Header />
-            <ErrorAlert message={errorMessage} onClose={clearErrorMessage} />
-            <NotificationToast />
-            <Outlet />
+            <div className="pt-16">
+                <ErrorAlert message={errorMessage} onClose={clearErrorMessage} />
+                <NotificationToast />
+                <Outlet />
+            </div>
         </>
     );
 };

@@ -39,12 +39,12 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, onClick }) 
                     {/* <p>End: {new Date(tournament.endDate).toLocaleDateString()}</p> */}
                 </div>
                 <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${tournament.status === 'active' ? 'bg-green-100 text-green-800' :
-                    tournament.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                    tournament.status === 'upcoming' ? 'bg-cyan-100 text-cyan-800' :
                         'bg-gray-100 text-gray-800'
                     }`}>
                     {tournament.status}
                 </span>
-                <button className="mt-2 w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">
+                <button className="mt-2 w-full bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">
                     View Details
                 </button>
             </div>

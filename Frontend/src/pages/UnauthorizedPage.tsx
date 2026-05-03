@@ -7,7 +7,7 @@ const UnauthorizedPage: React.FC = () => {
     const { user } = useAuth();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-white flex items-center justify-center p-4">
             <div className="text-center max-w-lg">
                 {/* Icono 403 */}
                 <div className="mb-6">

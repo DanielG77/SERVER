@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { objectToQueryString } from '../utils/queryParams';
-import { useRef } from 'react';
 
 interface TournamentFilters {
     page?: number;
@@ -49,16 +48,16 @@ interface UseTournamentsReturn {
 
 export const useTournaments = (filters: TournamentFilters): UseTournamentsReturn => {
     const { authFetch } = useAuth();
+
     const [data, setData] = useState<Tournament[]>([]);
     const [meta, setMeta] = useState<TournamentMeta | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const fetchTournaments = useCallback(async (currentFilters: TournamentFilters) => {
-        setLoading(true);
-        setError(null);
-
+        // 🔥 Cancelar request anterior
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
@@ -66,43 +65,44 @@ export const useTournaments = (filters: TournamentFilters): UseTournamentsReturn
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
+        setLoading(true);
+        setError(null);
+
         try {
             const queryString = objectToQueryString(currentFilters);
-            const url = `/tournaments?${queryString}`;
+            const url = `/tournaments${queryString ? `?${queryString}` : ''}`;
 
-            // 🔍 LOG 1: Mostrar la URL que se va a llamar
             console.log('🔍 Fetching tournaments with URL:', url);
 
-            const response = await authFetch(url, { signal: controller.signal });
+            const response = await authFetch(url, {
+                signal: controller.signal,
+            });
 
-            // 🔍 LOG 2: Ver el estado de la respuesta y los headers
             console.log('📡 Response status:', response.status);
-            console.log('📡 Content-Type:', response.headers.get('content-type'));
 
             if (!response.ok) {
-                // Intentamos leer el cuerpo como texto para ver si es HTML o JSON de error
                 const errorText = await response.text();
-                console.error('❌ Error response body:', errorText.substring(0, 200)); // primeros 200 caracteres
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.error('❌ Error response:', errorText.substring(0, 200));
+                throw new Error(`HTTP ${response.status}`);
             }
 
-            // 🔍 LOG 3: Antes de parsear JSON, verificamos que sea JSON
             const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
+
+            if (!contentType?.includes('application/json')) {
                 const text = await response.text();
-                console.error('❌ Respuesta no es JSON, es:', contentType, text.substring(0, 200));
-                throw new Error('La respuesta no es JSON');
+                console.error('❌ Not JSON:', text.substring(0, 200));
+                throw new Error('Response is not JSON');
             }
 
             const result = await response.json();
 
-            // 🔍 LOG 4: Mostrar el resultado (primeros datos)
-            console.log('✅ Datos recibidos:', result);
+            console.log('✅ Data received:', result);
 
-            setData(result.data || []);
+            setData(result.data ?? []);
 
             if (result.meta?.pagination) {
                 const { total, page, limit } = result.meta.pagination;
+
                 setMeta({
                     total,
                     page,
@@ -115,27 +115,21 @@ export const useTournaments = (filters: TournamentFilters): UseTournamentsReturn
 
         } catch (err) {
             if (err instanceof Error && err.name !== 'AbortError') {
-                console.error('🔥 Error en fetchTournaments:', err);
+                console.error('🔥 Fetch error:', err);
                 setError(err.message);
             }
         } finally {
-            setLoading(false);
+            // 🔥 IMPORTANTE: no pisar loading si fue abortado
+            if (!controller.signal.aborted) {
+                setLoading(false);
+            }
         }
     }, [authFetch]);
 
+    // 🔥 Dependencias simplificadas (más robusto)
     useEffect(() => {
         fetchTournaments(filters);
-    }, [
-        filters.page,
-        filters.limit,
-        filters.q,
-        filters.sort,
-        filters.status,
-        filters.gameId,
-        JSON.stringify(filters.genreIds),
-        JSON.stringify(filters.formatIds),
-        JSON.stringify(filters.platformIds),
-    ]);
+    }, [fetchTournaments, JSON.stringify(filters)]);
 
     const refetch = useCallback(() => {
         fetchTournaments(filters);

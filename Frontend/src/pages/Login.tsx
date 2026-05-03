@@ -143,8 +143,8 @@ const Login = () => {
                     <button
                         onClick={() => switchMode('login')}
                         className={`flex-1 py-2 px-4 font-semibold transition ${mode === 'login'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-800'
+                            ? 'border-b-2 border-cyan-600 text-cyan-600'
+                            : 'text-gray-600 hover:text-gray-800'
                             }`}
                     >
                         Iniciar Sesión
@@ -152,8 +152,8 @@ const Login = () => {
                     <button
                         onClick={() => switchMode('register')}
                         className={`flex-1 py-2 px-4 font-semibold transition ${mode === 'register'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-800'
+                            ? 'border-b-2 border-cyan-600 text-cyan-600'
+                            : 'text-gray-600 hover:text-gray-800'
                             }`}
                     >
                         Registrarse
@@ -189,8 +189,8 @@ const Login = () => {
                                     }
                                 }}
                                 className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 ${getFieldError('email', loginFieldErrors)
-                                        ? 'border-red-500 focus:ring-red-500'
-                                        : 'border-gray-300 focus:ring-blue-500'
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'border-gray-300 focus:ring-blue-500'
                                     }`}
                                 placeholder="usuario@example.com"
                             />
@@ -254,8 +254,8 @@ const Login = () => {
                                     }
                                 }}
                                 className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 ${getFieldError('username', registerFieldErrors)
-                                        ? 'border-red-500 focus:ring-red-500'
-                                        : 'border-gray-300 focus:ring-blue-500'
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'border-gray-300 focus:ring-blue-500'
                                     }`}
                                 placeholder="usuario123"
                             />
@@ -282,8 +282,8 @@ const Login = () => {
                                     }
                                 }}
                                 className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 ${getFieldError('email', registerFieldErrors)
-                                        ? 'border-red-500 focus:ring-red-500'
-                                        : 'border-gray-300 focus:ring-blue-500'
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'border-gray-300 focus:ring-blue-500'
                                     }`}
                                 placeholder="usuario@example.com"
                             />
@@ -310,8 +310,8 @@ const Login = () => {
                                     }
                                 }}
                                 className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 ${getFieldError('password', registerFieldErrors)
-                                        ? 'border-red-500 focus:ring-red-500'
-                                        : 'border-gray-300 focus:ring-blue-500'
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'border-gray-300 focus:ring-blue-500'
                                     }`}
                                 placeholder="••••••••"
                             />
@@ -334,8 +334,8 @@ const Login = () => {
                                 value={registerConfirmPassword}
                                 onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                                 className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 ${getFieldError('confirmPassword', registerFieldErrors)
-                                        ? 'border-red-500 focus:ring-red-500'
-                                        : 'border-gray-300 focus:ring-blue-500'
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'border-gray-300 focus:ring-blue-500'
                                     }`}
                                 placeholder="••••••••"
                             />

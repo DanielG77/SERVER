@@ -367,7 +367,7 @@ const AdminTournamentsTab: React.FC = () => {
                                                 setEditingTournament(tournament);
                                                 setIsFormOpen(true);
                                             }}
-                                            className="text-blue-400 hover:text-blue-300"
+                                            className="text-cyan-400 hover:text-cyan-300"
                                             title="Editar"
                                         >
                                             ✏️

@@ -214,7 +214,7 @@ const AdminGamesTab: React.FC = () => {
                                 <div className="flex gap-2 pt-4 border-t border-gray-600">
                                     <button
                                         onClick={() => openForm(game)}
-                                        className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 transition rounded text-sm"
+                                        className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 transition rounded text-sm"
                                     >
                                         ✏️ Editar
                                     </button>
@@ -292,7 +292,7 @@ const AdminGamesTab: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="flex-1 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50"
                                 >
                                     {submitting ? 'Guardando...' : 'Guardar'}
                                 </button>

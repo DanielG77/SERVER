@@ -19,6 +19,13 @@ import jakarta.persistence.criteria.Subquery;
 
 public class TournamentSpecification {
 
+    /**
+     * Active tournaments only (isActive = true)
+     */
+    public static Specification<TournamentEntity> active() {
+        return (root, query, cb) -> cb.equal(root.get("isActive"), true);
+    }
+
     public static Specification<TournamentEntity> withFilter(TournamentFilter filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();

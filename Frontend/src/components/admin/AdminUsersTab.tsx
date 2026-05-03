@@ -164,7 +164,7 @@ const AdminUsersTab: React.FC = () => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleEdit(user)}
-                                            className="text-blue-400 hover:text-blue-300"
+                                            className="text-cyan-400 hover:text-cyan-300"
                                             title="Editar"
                                         >
                                             ✏️

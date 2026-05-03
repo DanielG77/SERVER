@@ -217,9 +217,9 @@ const ProfilePage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
                     <p className="text-gray-300">Cargando perfil...</p>
                 </div>
             </div>
@@ -229,12 +229,12 @@ const ProfilePage: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8 pt-24">
+        <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-white p-8 pt-24">
             <div className="max-w-6xl mx-auto">
                 {/* Perfil superior */}
-                <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-2xl shadow-xl p-8 mb-12">
+                <div className="bg-gradient-to-r from-cyan-900 to-cyan-800 rounded-2xl shadow-xl p-8 mb-12">
                     <div className="flex items-center gap-6">
-                        <div className="w-32 h-32 rounded-full bg-blue-600 flex items-center justify-center text-5xl font-bold shadow-lg">
+                        <div className="w-32 h-32 rounded-full bg-cyan-600 flex items-center justify-center text-5xl font-bold shadow-lg">
                             {user?.username?.charAt(0).toUpperCase()}
                         </div>
 
@@ -346,14 +346,14 @@ const ProfilePage: React.FC = () => {
                                                             </span>
                                                         </p>
 
-                                                        <p>
+                                                        {/* <p>
                                                             <span className="text-gray-400">Expira:</span>{' '}
                                                             <span className="font-semibold">
                                                                 {reservation.expiresAt
                                                                     ? new Date(reservation.expiresAt).toLocaleString('es-ES')
                                                                     : 'No disponible'}
                                                             </span>
-                                                        </p>
+                                                        </p> */}
                                                     </div>
                                                 </div>
 

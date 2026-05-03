@@ -154,3 +154,16 @@ export interface CancelTournamentResponse {
 export interface CancelTournamentRequest {
     reason?: string;
 }
+
+type Filters = {
+    page: number;
+    limit: number;
+    q: string;
+    sort: string;
+    status: string;
+    gameId: string;
+    genreIds: string[];
+    formatIds: string[];
+    platformIds: string[];
+    is_active: boolean;
+};

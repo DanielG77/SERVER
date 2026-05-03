@@ -25,14 +25,14 @@ import com.tournaments.domain.model.TournamentFormat;
 import com.tournaments.domain.pagination.DomainPage;
 import com.tournaments.domain.pagination.PageableRequest;
 import com.tournaments.domain.repository.TournamentRepository;
+import com.tournaments.infrastructure.persistence.entities.TournamentEntity;
+import com.tournaments.infrastructure.persistence.repositories.jpa.JpaTournamentRepository;
 import com.tournaments.infrastructure.security.CustomUserDetails;
+import com.tournaments.presentation.request.CancelTournamentRequest;
 import com.tournaments.presentation.request.CreateTournamentRequest;
 import com.tournaments.presentation.request.UpdateTournamentRequest;
-import com.tournaments.presentation.request.CancelTournamentRequest;
 import com.tournaments.presentation.response.CancelTournamentResponse;
 import com.tournaments.shared.exceptions.TournamentNotFoundException;
-import com.tournaments.infrastructure.persistence.repositories.jpa.JpaTournamentRepository;
-import com.tournaments.infrastructure.persistence.entities.TournamentEntity;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
@@ -118,6 +118,9 @@ public class TournamentServiceImpl implements TournamentService {
         BigDecimal priceClient = request.getPriceClient() != null ? request.getPriceClient() : BigDecimal.ZERO;
         BigDecimal pricePlayer = request.getPricePlayer() != null ? request.getPricePlayer() : BigDecimal.ZERO;
 
+        // 🔹 capacity SIEMPRE igual a maxPlayers
+        Integer capacity = request.getMaxPlayers();
+
         Tournament tournament = new Tournament(
                 null,
                 request.getName(),
@@ -137,7 +140,7 @@ public class TournamentServiceImpl implements TournamentService {
                 request.getMinPlayers() != null ? request.getMinPlayers() : 1,
                 request.getMaxPlayers(),
                 null, /* platforms */
-                request.getCapacity(),
+                capacity,
                 0, /* ticketsSold */
                 currentUser.getId() /* ownerId */
         );
@@ -193,7 +196,9 @@ public class TournamentServiceImpl implements TournamentService {
         boolean newIsOnline = request.getIsOnline() != null ? request.getIsOnline() : existing.isOnline();
         Integer newMinPlayers = request.getMinPlayers() != null ? request.getMinPlayers() : existing.getMinPlayers();
         Integer newMaxPlayers = request.getMaxPlayers() != null ? request.getMaxPlayers() : existing.getMaxPlayers();
-        Integer newCapacity = request.getCapacity() != null ? request.getCapacity() : existing.getCapacity();
+
+        // 🔹 capacity SIEMPRE igual a maxPlayers
+        Integer newCapacity = newMaxPlayers;
 
         // Validar número de jugadores
         if (newMinPlayers != null && newMinPlayers <= 0) {

@@ -26,9 +26,9 @@
     pointer-events: none;
 }
 
-/* Botones con foco visible accesible */
+/* Botones con foco visible accesible - CMG Gaming Palette */
 button:focus-visible {
-    @apply outline outline-2 outline-offset-2 outline-indigo-400;
+    @apply outline outline-2 outline-offset-2 outline-cyan-400;
 }
 
 /* Animaciones para toasts y modales */
@@ -102,20 +102,108 @@ button:focus-visible {
     @apply fixed inset-0 bg-black/50 transition-opacity duration-200;
 }
 
-/* Estilos para input focus dentro de formularios */
+/* Estilos para input focus dentro de formularios - CMG Gaming Palette */
 input:focus,
 select:focus,
 textarea:focus {
-    @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-cyan-500 ring-offset-2 ring-offset-gray-900;
 }
 
-/* Estilos para badges de roles */
+/* Estilos para badges de roles - CMG Gaming Palette */
 .badge-admin {
-    @apply inline-block px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded-full;
+    @apply inline-block px-3 py-1 text-xs font-semibold text-white bg-orange-600 rounded-full shadow-lg shadow-orange-500/50;
 }
 
 .badge-user {
-    @apply inline-block px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-full;
+    @apply inline-block px-3 py-1 text-xs font-semibold text-white bg-cyan-600 rounded-full shadow-lg shadow-cyan-500/30;
+}
+
+/* ========== CMG GAMING PALETTE UTILITIES ========== */
+
+/* Background utilities */
+.bg-dark {
+    @apply bg-slate-950;
+}
+
+.bg-dark-surface {
+    @apply bg-slate-900/50;
+}
+
+.bg-dark-card {
+    @apply bg-slate-900/30;
+}
+
+/* Glow effects - Neon */
+.glow-cyan {
+    @apply shadow-lg shadow-cyan-500/50;
+}
+
+.glow-lime {
+    @apply shadow-lg shadow-lime-500/50;
+}
+
+.glow-orange {
+    @apply shadow-lg shadow-orange-500/50;
+}
+
+/* Hover glow effects */
+.hover:glow-cyan:hover {
+    @apply shadow-xl shadow-cyan-500/70;
+}
+
+.hover:glow-lime:hover {
+    @apply shadow-xl shadow-lime-500/70;
+}
+
+.hover:glow-orange:hover {
+    @apply shadow-xl shadow-orange-500/70;
+}
+
+/* Text utilities */
+.text-primary {
+    @apply text-white;
+}
+
+.text-secondary {
+    @apply text-gray-300;
+}
+
+.text-accent-cyan {
+    @apply text-cyan-400;
+}
+
+.text-accent-lime {
+    @apply text-lime-400;
+}
+
+.text-accent-orange {
+    @apply text-orange-400;
+}
+
+/* Border utilities */
+.border-accent-cyan {
+    @apply border-cyan-500/30;
+}
+
+.border-accent-lime {
+    @apply border-lime-500/30;
+}
+
+.border-accent-orange {
+    @apply border-orange-500/30;
+}
+
+/* Gradient utilities */
+.gradient-cyan-lime {
+    @apply bg-gradient-to-r from-cyan-500 to-lime-500;
+}
+
+.gradient-cyan-orange {
+    @apply bg-gradient-to-r from-cyan-500 to-orange-500;
+}
+
+.gradient-lime-orange {
+    @apply bg-gradient-to-r from-lime-500 to-orange-500;
 }
 
 /* Estilos para estado de carga */

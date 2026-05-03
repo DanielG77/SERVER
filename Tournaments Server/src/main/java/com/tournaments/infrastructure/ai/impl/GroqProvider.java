@@ -5,13 +5,17 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournaments.infrastructure.ai.AiProvider;
+import com.tournaments.presentation.request.SearchIntent;
 
 @Component
 public class GroqProvider implements AiProvider {
@@ -66,6 +70,94 @@ public class GroqProvider implements AiProvider {
         }
 
         return extractContent(response.body());
+    }
+
+    @Override
+    public SearchIntent interpretQuery(String naturalLanguageQuery) throws Exception {
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new IllegalStateException("Groq API key not configured");
+        }
+
+        String prompt = String.format(
+            "You are a tournament search interpreter for an esports platform.\n" +
+            "Extract structured search intent from the user query.\n\n" +
+            "Instructions:\n" +
+            "1. Extract ONLY a valid JSON object with exact field names\n" +
+            "2. For gameName: Try exact match with common esports titles first (Dota 2, Valorant, Counter-Strike 2, League of Legends, Starcraft 2)\n" +
+            "3. For confidence: 0.9+ if clear intent, 0.5-0.8 if partial/ambiguous, <0.5 if unclear\n" +
+            "4. For dates: Use YYYY-MM-DD HH:mm format, assume current timezone\n" +
+            "5. For prices: Return number only (e.g., 50, not '$50')\n\n" +
+            "JSON Format (exact field names required):\n" +
+            "{\n" +
+            "  \"gameName\": \"exact game name or null\",\n" +
+            "  \"dateFrom\": \"YYYY-MM-DD HH:mm or null\",\n" +
+            "  \"dateTo\": \"YYYY-MM-DD HH:mm or null\",\n" +
+            "  \"priceMin\": number or null,\n" +
+            "  \"priceMax\": number or null,\n" +
+            "  \"isOnline\": true/false or null,\n" +
+            "  \"keywords\": [\"word1\", \"word2\"],\n" +
+            "  \"confidence\": 0.0-1.0\n" +
+            "}\n\n" +
+            "User Query: \"%s\"\n" +
+            "Today is: %s\n\n" +
+            "Return ONLY the JSON object, no explanation.", 
+            naturalLanguageQuery, 
+            java.time.LocalDate.now()
+        );
+
+        String requestBody = String.format(
+            "{\"model\":\"mixtral-8x7b-32768\",\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}],\"max_tokens\":500}",
+            escapeJson(prompt)
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(API_URL))
+            .timeout(TIMEOUT)
+            .header("Authorization", "Bearer " + apiKey)
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Groq API error: " + response.body());
+        }
+
+        return parseSearchIntent(response.body());
+    }
+
+    private SearchIntent parseSearchIntent(String response) throws Exception {
+        String jsonContent = extractContent(response);
+        
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(jsonContent);
+            
+            SearchIntent intent = new SearchIntent();
+            intent.setGameName(root.has("gameName") && !root.get("gameName").isNull() ? root.get("gameName").asText() : null);
+            intent.setPriceMin(root.has("priceMin") && !root.get("priceMin").isNull() ? java.math.BigDecimal.valueOf(root.get("priceMin").asDouble()) : null);
+            intent.setPriceMax(root.has("priceMax") && !root.get("priceMax").isNull() ? java.math.BigDecimal.valueOf(root.get("priceMax").asDouble()) : null);
+            intent.setIsOnline(root.has("isOnline") && !root.get("isOnline").isNull() ? root.get("isOnline").asBoolean() : null);
+            intent.setConfidence(root.has("confidence") ? root.get("confidence").asDouble() : 0.5);
+            
+            // Parse keywords
+            java.util.List<String> keywords = new ArrayList<>();
+            if (root.has("keywords") && root.get("keywords").isArray()) {
+                for (JsonNode keyword : root.get("keywords")) {
+                    keywords.add(keyword.asText());
+                }
+            }
+            intent.setKeywords(keywords);
+            
+            return intent;
+        } catch (Exception e) {
+            logger.warn("Failed to parse search intent JSON, using fallback", e);
+            SearchIntent fallback = new SearchIntent();
+            fallback.setConfidence(0.0);
+            fallback.setKeywords(new ArrayList<>());
+            return fallback;
+        }
     }
 
     @Override

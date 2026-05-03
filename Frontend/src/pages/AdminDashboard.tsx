@@ -19,7 +19,7 @@ const AdminDashboard: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8 pt-24">
+        <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-950 text-white p-8 pt-24">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -34,8 +34,8 @@ const AdminDashboard: React.FC = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`px-6 py-3 font-semibold border-b-2 transition ${activeTab === tab.id
-                                    ? 'border-blue-500 text-blue-400'
-                                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                                ? 'border-cyan-500 text-cyan-400'
+                                : 'border-transparent text-gray-400 hover:text-gray-300'
                                 }`}
                         >
                             {tab.icon} {tab.label}

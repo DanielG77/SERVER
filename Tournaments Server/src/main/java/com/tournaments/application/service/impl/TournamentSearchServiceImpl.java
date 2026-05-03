@@ -16,10 +16,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.tournaments.application.service.TournamentSearchService;
+import com.tournaments.domain.enums.TournamentStatus;
 import com.tournaments.domain.model.Tournament;
+import com.tournaments.domain.model.TournamentFilter;
+import com.tournaments.domain.pagination.DomainPage;
 import com.tournaments.domain.pagination.PageableRequest;
+import com.tournaments.domain.repository.GameRepository;
 import com.tournaments.domain.repository.TournamentRepository;
 import com.tournaments.infrastructure.ai.AiGatewayService;
+import com.tournaments.presentation.request.SearchIntent;
 import com.tournaments.presentation.response.TournamentSearchResultResponse;
 
 @Service
@@ -27,13 +32,18 @@ public class TournamentSearchServiceImpl implements TournamentSearchService {
 
     private static final Logger logger = LoggerFactory.getLogger(TournamentSearchServiceImpl.class);
     private static final int MAX_RESULTS = 20;
+    private static final double CONFIDENCE_THRESHOLD_HIGH = 0.75;
+    private static final double CONFIDENCE_THRESHOLD_MERGE = 0.50;
 
     private final TournamentRepository tournamentRepository;
+    private final GameRepository gameRepository;
     private final AiGatewayService aiGatewayService;
 
     public TournamentSearchServiceImpl(TournamentRepository tournamentRepository,
+                                      GameRepository gameRepository,
                                       AiGatewayService aiGatewayService) {
         this.tournamentRepository = tournamentRepository;
+        this.gameRepository = gameRepository;
         this.aiGatewayService = aiGatewayService;
     }
 
@@ -41,62 +51,202 @@ public class TournamentSearchServiceImpl implements TournamentSearchService {
     public List<TournamentSearchResultResponse> searchTournaments(String query) {
         logger.info("Searching tournaments with query: {}", query);
 
-        // 1. Extract keywords and infer filters
+        // 1. Parse query with AI + fallback
         SearchContext context = parseQuery(query);
+        logger.info("Search context: gameId={}, dates={}-{}, isOnline={}, keywords={}, aiConfidence={}, source={}",
+            context.getGameId(),
+            context.getDateFrom(),
+            context.getDateTo(),
+            context.getIsOnline(),
+            context.getKeywords(),
+            context.getAiConfidence(),
+            context.getAiInterpretation());
 
-        // 2. Normalize query for search
-        String normalizedQuery = normalizeQuery(query);
-
-        // 3. Get tournaments from database (all active ones first, then filter)
-        // For MVP, fetch limited active tournaments and filter in memory
-        List<Tournament> allTournaments = fetchActiveTournaments();
-
-        if (allTournaments.isEmpty()) {
-            logger.debug("No tournaments found in database");
+        // 2. Fetch from DB (not all tournaments!)
+        List<Tournament> results = fetchActiveTournaments(context);
+        
+        if (results.isEmpty()) {
+            logger.debug("No tournaments matched search criteria");
             return new ArrayList<>();
         }
 
-        // 4. Filter and score results
-        List<TournamentSearchResult> scoredResults = allTournaments.stream()
-            .map(t -> {
-                double score = calculateScore(t, context, normalizedQuery);
-                return new TournamentSearchResult(t, score);
-            })
-            .filter(r -> r.getScore() > 0)
+        // 3. Score (in memory, minimal set)
+        String normalizedQuery = normalizeQuery(query);
+        List<TournamentSearchResult> scoredResults = results.stream()
+            .map(t -> new TournamentSearchResult(t, calculateScore(t, context, normalizedQuery)))
             .sorted(Comparator.comparingDouble(TournamentSearchResult::getScore).reversed())
             .limit(MAX_RESULTS)
             .collect(Collectors.toList());
 
         if (scoredResults.isEmpty()) {
-            logger.debug("No tournaments matched the search criteria");
+            logger.debug("No tournaments scored above threshold");
             return new ArrayList<>();
         }
 
-        // 5. For top 3 results, generate AI explanation (non-blocking)
+        // 4. Enrich top 3 with AI explanations
         List<TournamentSearchResultResponse> finalResults = scoredResults.stream()
             .limit(3)
             .map(result -> enrichWithAiExplanation(result, query))
             .collect(Collectors.toList());
 
-        // Add remaining results without AI explanation
+        // Add remaining without explanations
         if (scoredResults.size() > 3) {
-            scoredResults.stream()
-                .skip(3)
-                .forEach(result -> {
-                    TournamentSearchResultResponse response = buildResponse(result, null);
-                    finalResults.add(response);
-                });
+            scoredResults.stream().skip(3).map(r -> buildResponse(r, null)).forEach(finalResults::add);
         }
 
-        logger.info("Search completed: found {} results", finalResults.size());
+        logger.info("Search completed: returned {} from {} candidates", finalResults.size(), results.size());
         return finalResults;
     }
 
     /**
      * Parse query to extract keywords and infer filters
+     * First attempts AI interpretation, falls back to heuristic parsing
+     * Supports soft degradation: confidence 0.5-0.75 merges AI + heuristic
      */
     private SearchContext parseQuery(String query) {
+        try {
+            SearchIntent aiIntent = aiGatewayService.interpretQuery(query);
+            
+            if (aiIntent == null) {
+                logger.warn("AI returned null intent, using heuristic");
+                return parseQueryHeuristic(query);
+            }
+            
+            // Normalize confidence
+            Double confidence = aiIntent.getConfidence() != null ? aiIntent.getConfidence() : 0.0;
+            
+            if (confidence >= CONFIDENCE_THRESHOLD_HIGH) {
+                // Full AI trust (>= 0.75)
+                logger.info("Using AI interpretation with confidence: {}", confidence);
+                return buildSearchContextFromAiIntent(aiIntent);
+            } 
+            else if (confidence >= CONFIDENCE_THRESHOLD_MERGE) {
+                // Merge AI + Heuristic (0.5-0.75)
+                logger.info("Merging AI ({}) + Heuristic for better coverage", confidence);
+                SearchContext aiContext = buildSearchContextFromAiIntent(aiIntent);
+                SearchContext heuristicContext = parseQueryHeuristic(query);
+                return mergeContexts(aiContext, heuristicContext);
+            } 
+            else {
+                // AI confidence too low (< 0.50)
+                logger.info("AI confidence {} too low, using heuristic", confidence);
+                return parseQueryHeuristic(query);
+            }
+            
+        } catch (Exception e) {
+            logger.warn("AI interpretation failed, falling back to heuristic parsing: {}", e.getMessage());
+            return parseQueryHeuristic(query);
+        }
+    }
+
+    /**
+     * Resolve game name from AI to gameId
+     * Tries exact match first, then prefix match
+     */
+    private Long resolveGameId(String gameName) {
+        if (gameName == null || gameName.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // Try 1: Exact case-insensitive match
+            var game = gameRepository.findByNameIgnoreCase(gameName);
+            if (game.isPresent()) {
+                logger.debug("Found exact game match: {} → {}", gameName, game.get().getId());
+                return game.get().getId();
+            }
+            
+            // Try 2: Prefix match (Dota 2 → Dota 2 Championship)
+            var gamePrefix = gameRepository.findByNameIgnoreCaseContaining(gameName);
+            if (!gamePrefix.isEmpty()) {
+                Long id = gamePrefix.get(0).getId();
+                logger.debug("Found prefix game match: {} → {}", gameName, id);
+                return id;
+            }
+            
+            logger.debug("No game found for: {}", gameName);
+            return null;
+        } catch (Exception e) {
+            logger.warn("Error resolving game name '{}': {}", gameName, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Build SearchContext from AI SearchIntent
+     */
+    private SearchContext buildSearchContextFromAiIntent(SearchIntent intent) {
         SearchContext context = new SearchContext();
+        context.setAiInterpretation("AI interpretation");
+        context.setAiConfidence(intent.getConfidence());
+        
+        // Dates (with validation)
+        if (intent.getDateFrom() != null && intent.getDateTo() != null) {
+            validateDateRange(intent.getDateFrom(), intent.getDateTo());
+            context.setDateFrom(intent.getDateFrom());
+            context.setDateTo(intent.getDateTo());
+        } else if (intent.getDateFrom() != null) {
+            context.setDateFrom(intent.getDateFrom());
+        } else if (intent.getDateTo() != null) {
+            context.setDateTo(intent.getDateTo());
+        }
+        
+        // Prices
+        if (intent.getPriceMin() != null) {
+            context.setMinPrice(intent.getPriceMin());
+        }
+        if (intent.getPriceMax() != null) {
+            context.setMaxPrice(intent.getPriceMax());
+        }
+        
+        // Platform
+        if (intent.getIsOnline() != null) {
+            context.setIsOnline(intent.getIsOnline());
+        }
+        
+        // CRITICAL: Resolve gameName to gameId
+        if (intent.getGameName() != null && !intent.getGameName().isEmpty()) {
+            Long gameId = resolveGameId(intent.getGameName());
+            context.setGameId(gameId);
+            logger.debug("Resolved game: '{}' → gameId={}", intent.getGameName(), gameId);
+        }
+        
+        // Keywords (only if needed for fuzzy matching)
+        if (intent.getKeywords() != null && !intent.getKeywords().isEmpty()) {
+            context.setKeywords(intent.getKeywords());
+        }
+        
+        return context;
+    }
+
+    /**
+     * Merge AI context with heuristic context for soft degradation
+     */
+    private SearchContext mergeContexts(SearchContext aiContext, SearchContext heuristicContext) {
+        // AI provides structure, heuristic augments with keywords and fills gaps
+        if (aiContext.getGameId() == null && heuristicContext.getGameId() != null) {
+            aiContext.setGameId(heuristicContext.getGameId());
+            logger.debug("Merged gameId from heuristic");
+        }
+        
+        if ((aiContext.getKeywords() == null || aiContext.getKeywords().isEmpty()) && 
+            heuristicContext.getKeywords() != null && !heuristicContext.getKeywords().isEmpty()) {
+            aiContext.setKeywords(heuristicContext.getKeywords());
+            logger.debug("Merged keywords from heuristic");
+        }
+        
+        // Keep AI's structured dates/prices, don't override with heuristic
+        return aiContext;
+    }
+
+    /**
+     * Heuristic query parsing (original logic)
+     */
+    private SearchContext parseQueryHeuristic(String query) {
+        SearchContext context = new SearchContext();
+        context.setAiInterpretation("Heuristic parsing");
+        context.setAiConfidence(0.0);
+        
         String lowerQuery = query.toLowerCase();
 
         // Date inference - Spanish and English
@@ -181,75 +331,148 @@ public class TournamentSearchServiceImpl implements TournamentSearchService {
     }
 
     /**
-     * Fetch active tournaments from database
+     * Fetch active tournaments from database using context filters
      */
-    private List<Tournament> fetchActiveTournaments() {
+    private List<Tournament> fetchActiveTournaments(SearchContext context) {
         try {
-            // Fetch max 100 active tournaments, ordered by most recent first
-            var pageRequest = PageableRequest.ofDefaults();
-            return tournamentRepository.findAll(pageRequest);
+            logger.debug("Fetching tournaments with context filters: gameId={}, dates={}-{}, online={}, priceRange={}-{}",
+                context.getGameId(),
+                context.getDateFrom(),
+                context.getDateTo(),
+                context.getIsOnline(),
+                context.getMinPrice(),
+                context.getMaxPrice());
+            
+            // Build TournamentFilter from SearchContext
+            // Use OPEN status for tournaments that are actively accepting registrations
+            TournamentFilter filter = new TournamentFilter(
+                TournamentStatus.OPEN,  // Only open tournaments
+                true,  // isActive
+                context.getDateFrom(),
+                context.getDateTo(),
+                null,  // search (using structured filters instead)
+                context.getGameId(),  // gameId
+                List.of(),  // genreIds
+                List.of(),  // platformIds
+                null,  // formatId
+                context.getIsOnline(),
+                null,  // minPlayers
+                null   // maxPlayers
+            );
+            
+            // Fetch max 100 active tournaments from DB
+            PageableRequest pageRequest = PageableRequest.ofDefaults();
+            DomainPage<Tournament> page = tournamentRepository.findAll(filter, pageRequest);
+            
+            logger.debug("Fetched {} tournaments from DB", page.getTotalElements());
+            return page.getContent();
         } catch (Exception e) {
-            logger.error("Error fetching tournaments", e);
+            logger.error("Error fetching tournaments with context", e);
             return new ArrayList<>();
         }
     }
 
     /**
      * Calculate relevance score for a tournament
+     * LAYER 1: Deterministic filter matches (highest weight)
+     * LAYER 2: Keyword/fuzzy matches (fallback)
      */
     private double calculateScore(Tournament tournament, SearchContext context, String normalizedQuery) {
         double score = 0.0;
         String lowerName = tournament.getName().toLowerCase();
-        String lowerDesc = tournament.getDescription().toLowerCase();
+        String lowerDesc = tournament.getDescription() != null ? tournament.getDescription().toLowerCase() : "";
         String lowerGame = tournament.getGame() != null ? tournament.getGame().getName().toLowerCase() : "";
 
-        // Score based on keyword matches
-        double keywordScore = 0.0;
-        if (context.getKeywords() != null) {
-            for (String keyword : context.getKeywords()) {
-                // Match in name (highest weight)
-                if (lowerName.contains(keyword)) {
-                    keywordScore += 3.0;
-                }
-                // Match in game (high weight)
-                else if (lowerGame.contains(keyword)) {
-                    keywordScore += 2.0;
-                }
-                // Match in description (lower weight)
-                else if (lowerDesc.contains(keyword)) {
-                    keywordScore += 0.5;
-                }
-            }
+        // LAYER 1: Deterministic filter matches (high weight)
+        // These should have been pre-filtered by DB, but checking for scoring
+        if (context.getGameId() != null && tournament.getGame() != null && 
+            tournament.getGame().getId().equals(context.getGameId())) {
+            score += 100.0;
+            logger.debug("Tournament {}: +100 (gameId exact match)", tournament.getId());
         }
 
-        score += keywordScore;
+        if (context.getIsOnline() != null && context.getIsOnline() == tournament.isOnline()) {
+            score += 50.0;
+            logger.debug("Tournament {}: +50 (online match)", tournament.getId());
+        }
 
-        // Bonus for date match
         if (context.getDateFrom() != null && tournament.getStartAt() != null) {
-            if (tournament.getStartAt().isAfter(context.getDateFrom()) &&
-                tournament.getStartAt().isBefore(context.getDateTo())) {
-                score += 2.0;
+            if (isWithinDateRange(tournament.getStartAt(), context.getDateFrom(), context.getDateTo())) {
+                score += 50.0;
+                logger.debug("Tournament {}: +50 (date match)", tournament.getId());
             }
         }
 
-        // Bonus for price match
         if (context.getMaxPrice() != null && tournament.getPriceClient() != null) {
             if (tournament.getPriceClient().compareTo(context.getMaxPrice()) <= 0) {
-                score += 1.5;
+                score += 30.0;
+                logger.debug("Tournament {}: +30 (price match)", tournament.getId());
             }
         }
 
-        // Bonus for online/offline match
-        if (context.getIsOnline() != null && context.getIsOnline() == tournament.isOnline()) {
-            score += 0.5;
+        // LAYER 2: Keyword/fuzzy matches (only if gameId was null or not matched)
+        if (context.getGameId() == null && context.getKeywords() != null && !context.getKeywords().isEmpty()) {
+            double keywordScore = calculateKeywordScore(tournament, context.getKeywords());
+            score += keywordScore;
+            if (keywordScore > 0) {
+                logger.debug("Tournament {}: +{} (keyword match)", tournament.getId(), keywordScore);
+            }
         }
 
-        // Filter out tournaments with no keywords match if keywords were provided
-        if (context.getKeywords() != null && !context.getKeywords().isEmpty() && keywordScore == 0) {
-            return 0.0;
+        // LAYER 3: Fallback to keyword matching if no deterministic match and keywords exist
+        if (score == 0.0 && context.getKeywords() != null && !context.getKeywords().isEmpty()) {
+            double keywordScore = calculateKeywordScore(tournament, context.getKeywords());
+            score = keywordScore;
+            if (keywordScore > 0) {
+                logger.debug("Tournament {}: +{} (fallback keyword match)", tournament.getId(), keywordScore);
+            }
         }
 
         return score;
+    }
+
+    /**
+     * Calculate score based on keyword matches
+     */
+    private double calculateKeywordScore(Tournament tournament, List<String> keywords) {
+        double score = 0.0;
+        String lowerName = tournament.getName().toLowerCase();
+        String lowerDesc = tournament.getDescription() != null ? tournament.getDescription().toLowerCase() : "";
+        String lowerGame = tournament.getGame() != null ? tournament.getGame().getName().toLowerCase() : "";
+
+        for (String keyword : keywords) {
+            if (lowerName.contains(keyword)) {
+                score += 20.0;
+            } else if (lowerGame.contains(keyword)) {
+                score += 15.0;
+            } else if (lowerDesc.contains(keyword)) {
+                score += 5.0;
+            }
+        }
+
+        return score;
+    }
+
+    /**
+     * Check if date is within range
+     */
+    private boolean isWithinDateRange(LocalDateTime start, LocalDateTime from, LocalDateTime to) {
+        if (from == null && to == null) return true;
+        if (from != null && start.isBefore(from)) return false;
+        if (to != null && start.isAfter(to)) return false;
+        return true;
+    }
+
+    /**
+     * Validate date range (from <= to)
+     */
+    private void validateDateRange(LocalDateTime from, LocalDateTime to) {
+        if (from != null && to != null && from.isAfter(to)) {
+            logger.warn("Invalid date range: {} > {}", from, to);
+        }
+        if (from != null && from.isBefore(LocalDateTime.now())) {
+            logger.warn("Date from {} is in the past", from);
+        }
     }
 
     /**
@@ -299,6 +522,9 @@ public class TournamentSearchServiceImpl implements TournamentSearchService {
         private BigDecimal maxPrice;
         private Boolean isOnline;
         private List<String> keywords;
+        private Long gameId;
+        private String aiInterpretation;
+        private Double aiConfidence;
 
         public LocalDateTime getDateFrom() { return dateFrom; }
         public void setDateFrom(LocalDateTime dateFrom) { this.dateFrom = dateFrom; }
@@ -317,6 +543,15 @@ public class TournamentSearchServiceImpl implements TournamentSearchService {
 
         public List<String> getKeywords() { return keywords; }
         public void setKeywords(List<String> keywords) { this.keywords = keywords; }
+
+        public Long getGameId() { return gameId; }
+        public void setGameId(Long gameId) { this.gameId = gameId; }
+
+        public String getAiInterpretation() { return aiInterpretation; }
+        public void setAiInterpretation(String aiInterpretation) { this.aiInterpretation = aiInterpretation; }
+
+        public Double getAiConfidence() { return aiConfidence; }
+        public void setAiConfidence(Double aiConfidence) { this.aiConfidence = aiConfidence; }
     }
 
     /**
